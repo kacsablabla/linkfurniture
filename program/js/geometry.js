@@ -16,6 +16,7 @@ var mousedown = false;
 var mousemoved = false;
 var mousedragging = false;
 var selectededges = [];
+var canvas = document.getElementById('viewer');
 
 function main_init() {
     
@@ -25,7 +26,7 @@ function main_init() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     // renderer
 
-    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
     renderer.setSize( window.innerWidth, window.innerHeight );
 
     // Skybox
@@ -96,10 +97,10 @@ function main_init() {
     
     orbitcontrol = new THREE.OrbitControls( camera );
     orbitcontrol.addEventListener( 'change', update );
-    document.addEventListener( 'mousedown', onDocumentMouseDown, false );
-    document.addEventListener( 'mouseup', onDocumentMouseUp, false );
-    document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-    document.addEventListener( 'click', onDocumentMouseClick, false );
+    canvas.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    canvas.addEventListener( 'mouseup', onDocumentMouseUp, false );
+    canvas.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    canvas.addEventListener( 'click', onDocumentMouseClick, false );
     
     scene.add( new THREE.GridHelper( 500, 100 ) );
    
@@ -182,36 +183,37 @@ function main_init() {
     }
     function render() {
         transformcontrol.update();
+        //orbitcontrol.update();
         // find intersections
         scene.simulate(); // run physic
         var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
-    projector.unprojectVector( vector, camera );
+        projector.unprojectVector( vector, camera );
 
-    raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+        raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
 
-    var intersects = raycaster.intersectObjects( objectgroup.children, true);
+        var intersects = raycaster.intersectObjects( objectgroup.children, true);
 
-    if ( intersects.length > 0 ) {
+        if ( intersects.length > 0 ) {
 
-        if ( currentIntersected !== undefined ) {
+            if ( currentIntersected !== undefined ) {
 
-            currentIntersected.hoverout();
+                currentIntersected.hoverout();
+            }
+
+            currentIntersected = intersects[ 0 ].object;
+            currentIntersected.hoverover();
+            
+
+        } else {
+
+            if ( currentIntersected !== undefined ) {
+
+                currentIntersected.hoverout();
+            }
+
+            currentIntersected = undefined;
         }
-
-        currentIntersected = intersects[ 0 ].object;
-        currentIntersected.hoverover();
-        
-
-    } else {
-
-        if ( currentIntersected !== undefined ) {
-
-            currentIntersected.hoverout();
-        }
-
-        currentIntersected = undefined;
-    }
-        renderer.render( scene, camera );
+            renderer.render( scene, camera );
     }
     function update() {
 
@@ -235,7 +237,7 @@ function onDocumentMouseClick(){
         else if (currentIntersected.transformable) {
             controllee = currentIntersected;
             transformcontrol.attach( controllee); 
-            //orbitcontrol.enabled = false; 
+            orbitcontrol.enabled = false; 
         }
         else{
             currentIntersected.select();
@@ -258,16 +260,18 @@ function onDocumentMouseUp( event ) {
 
     event.preventDefault();
     mousedown = false;
-    mousedragging = false;
     
 }
 
 function onDocumentMouseMove( event ) {
+
     event.preventDefault();
     if (mousedown) {mousedragging = true};
     mousemoved = true;
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+
+    var rect = canvas.getBoundingClientRect();
+    mouse.x = ( (event.clientX-rect.left)/ window.innerWidth ) * 2 - 1;
+    mouse.y = - ( (event.clientY-rect.top) / window.innerHeight ) * 2 + 1;
     
 
 

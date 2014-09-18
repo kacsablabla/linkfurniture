@@ -7,10 +7,23 @@
 		<div id="panel" >
 			Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 		</div>
+		<canvas id="viewer">
+			<script src="js/three.min.js"></script>
+			<script type="text/javascript" src="js/physi.js"></script>
+	        <script src="js/STLLoader.js"></script>
+	        <script src="js/geometry.js"></script>
+	        <script src="js/objects.js"></script>
+	        <script src="js/OrbitControls.js"></script>
+	        <script src="js/TransformControls.js"></script>
+	        	
+			<script>
+				'use strict';
 
-		
-		
-		<iframe id="viewer" src="szerkeszto.html"></iframe>
-
+			    Physijs.scripts.worker = '/js/physijs_worker.js';
+			    Physijs.scripts.ammo = '/js/ammo.js';
+				main_init();
+	        </script>
+	    </canvas>
+	    
 	</body>
 </html>

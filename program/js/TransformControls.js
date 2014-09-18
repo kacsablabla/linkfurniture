@@ -745,7 +745,7 @@
 			if ( scope.object === undefined || _dragging === true ) return;
 
 			event.preventDefault();
-			event.stopPropagation();
+			//event.stopPropagation();
 
 			var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
 
@@ -788,7 +788,7 @@
 
 			if ( scope.object === undefined || scope.axis === null || _dragging === false ) return;
 			event.preventDefault();
-			event.stopPropagation();
+			//event.stopPropagation();
 
 			var pointer = event.changedTouches? event.changedTouches[0] : event;
 
