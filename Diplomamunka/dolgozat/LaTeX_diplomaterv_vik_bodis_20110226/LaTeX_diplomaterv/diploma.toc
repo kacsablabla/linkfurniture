@@ -1,0 +1,25 @@
+\select@language {magyar} \contentsline {chapter}{Kivonat}{3}{chapter*.2}
+\select@language {magyar} \contentsline {chapter}{Abstract}{4}{chapter*.3}
+\select@language {magyar} \contentsline {chapter}{Bevezet\H o}{5}{chapter*.4}
+\select@language {magyar} \contentsline {chapter}{\numberline {1}\textlatin {\LaTeX }-eszk\"oz\"ok}{6}{chapter.1}
+\select@language {magyar} \contentsline {section}{\numberline {1.1}A szerkeszt\'eshez haszn\'alatos, Windows alap\'u eszk\"oz\"ok}{6}{section.1.1}
+\select@language {magyar} \contentsline {section}{\numberline {1.2}A dokumentum leford\IeC {\'\i }t\'asa Windows alatt}{7}{section.1.2}
+\select@language {magyar} \contentsline {section}{\numberline {1.3}Eszk\"oz\"ok Linuxhoz}{7}{section.1.3}
+\select@language {magyar} \contentsline {chapter}{\numberline {2}A dolgozat formai kivitele}{8}{chapter.2}
+\select@language {magyar} \contentsline {section}{\numberline {2.1}A dolgozat kim\'erete}{8}{section.2.1}
+\select@language {magyar} \contentsline {section}{\numberline {2.2}A dolgozat nyelve}{8}{section.2.2}
+\select@language {magyar} \contentsline {section}{\numberline {2.3}A dokumentum nyomdatechnikai kivitele}{8}{section.2.3}
+\select@language {magyar} \contentsline {chapter}{\numberline {3}A \textlatin {\LaTeX }-sablon haszn\'alata}{9}{chapter.3}
+\select@language {magyar} \contentsline {section}{\numberline {3.1}C\IeC {\'\i }mk\'ek \'es hivatkoz\'asok}{9}{section.3.1}
+\select@language {magyar} \contentsline {section}{\numberline {3.2}\'Abr\'ak \'es t\'abl\'azatok}{10}{section.3.2}
+\select@language {magyar} \contentsline {section}{\numberline {3.3}Felsorol\'asok \'es list\'ak}{11}{section.3.3}
+\select@language {magyar} \contentsline {section}{\numberline {3.4}K\'epletek}{12}{section.3.4}
+\select@language {magyar} \contentsline {section}{\numberline {3.5}Irodalmi hivatkoz\'asok}{13}{section.3.5}
+\select@language {magyar} \contentsline {section}{\numberline {3.6}A dolgozat szerkezete \'es a forr\'asf\'ajlok}{16}{section.3.6}
+\select@language {magyar} \contentsline {section}{\numberline {3.7}Alapadatok megad\'asa}{17}{section.3.7}
+\select@language {magyar} \contentsline {section}{\numberline {3.8}\'Uj fejezet \IeC {\'\i }r\'asa}{17}{section.3.8}
+\select@language {magyar} \contentsline {chapter}{K\"osz\"onetnyilv\'an\IeC {\'\i }t\'as}{18}{chapter*.14}
+\select@language {magyar} \contentsline {chapter}{F\"uggel\'ek}{19}{appendix*.15}
+\select@language {magyar} \contentsline {section}{\numberline {F.1}A TeXnicCenter fel\"ulete}{19}{section.F.1}
+\select@language {magyar} \contentsline {section}{\numberline {F.2}V\'alasz az ,,\'Elet, a vil\'agmindens\'eg, meg minden'' k\'erd\'es\'ere}{20}{section.F.2}
+\select@language {magyar} \contentsline {chapter}{Irodalomjegyz\'ek}{19}{chapter*.14}
