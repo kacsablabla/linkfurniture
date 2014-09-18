@@ -127,7 +127,6 @@ function main_init() {
 
     
     var square1 = new Square();
-    var square2 = new Square();
     objectgroup.add(square1);
     //square1.add(square2);
     //square2.position.y +=10;
@@ -141,7 +140,7 @@ function main_init() {
 
     transformcontrol.addEventListener( 'change', render );
 
-    window.addEventListener( 'keydown', function ( event ) {
+    canvas.addEventListener( 'keydown', function ( event ) {
         //console.log(event.which);
         switch ( event.keyCode ) {
           case 81: // Q
@@ -249,7 +248,7 @@ function onDocumentMouseClick(){
 }
 
 function onDocumentMouseDown( event ) {
-
+    canvas.focus();
     event.preventDefault();
     mousedown = true;
     mousedragging = false;
@@ -301,4 +300,16 @@ function addShadowedLight( x, y, z, color, intensity ) {
     directionalLight.shadowBias = -0.005;
     directionalLight.shadowDarkness = 0.15;
 
+}
+
+function executecommand(){
+
+    var command = document.getElementById('command').value.split();
+    switch(command[0]){
+        case 'square':
+            objectgroup.add(new Square());
+            berak;
+        case 'connect':
+            break;
+    }
 }
