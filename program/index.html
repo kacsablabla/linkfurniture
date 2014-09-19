@@ -16,6 +16,7 @@
 			       tabindex='1' />
 
 			<button id="execute" onclick="executecommand()">execute</button>
+			<button id="physics" onclick="physicsswitch()">physics</button>
 		</div>
 		<canvas id="viewer" tabindex='1'>
 			<script src="js/three.min.js"></script>
@@ -29,8 +30,8 @@
 			<script>
 				'use strict';
 
-			    Physijs.scripts.worker = '/js/physijs_worker.js';
-			    Physijs.scripts.ammo = '/js/ammo.js';
+			    Physijs.scripts.worker = 'js/physijs_worker.js';
+			    Physijs.scripts.ammo = 'js/ammo.js';
 				main_init();
 	        </script>
 	    </canvas>

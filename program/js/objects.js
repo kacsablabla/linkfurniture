@@ -12,7 +12,7 @@ Element = function(geometry,material){
 
     this.selected = false;
     this.transformable = true; 
-    THREE.Mesh.call(this,geometry,material);
+    Physijs.BoxMesh.call(this,geometry,material,5);
 
     this.hoverover = function() {
         if (!this.selected) {
@@ -56,7 +56,7 @@ Element = function(geometry,material){
     }
 }
 
-Element.prototype = Object.create(THREE.Mesh.prototype);
+//Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
 
 Edge = function(a,b,parent) {
 
@@ -70,8 +70,9 @@ Edge = function(a,b,parent) {
 
     this.parent = parent;
     this.neighbours = [];
-    Element.call(this,geometry,material);
+    Physijs.CylinderMesh.call(this,geometry,material);
 
+    this.selected = false;
     this.transformable = false;
 
     this.log = function() {
@@ -80,7 +81,7 @@ Edge = function(a,b,parent) {
 };
 
 
-Edge.prototype = Object.create(Element.prototype);
+Edge.prototype = Object.create(Physijs.CylinderMesh.prototype);
 
 Square = function() {
 
@@ -99,7 +100,9 @@ Square = function() {
                 map:texture,
                 side:THREE.DoubleSide
     });
-    Element.call(this,geometry,material);
+    Physijs.BoxMesh.call(this,geometry,material);
+    this.selected = false;
+    this.transformable = true; 
 
     var oldRotationMatrix = new THREE.Matrix4();
     
@@ -132,6 +135,28 @@ Square = function() {
 
 
 };
-Square.prototype = Object.create(Element.prototype);
+Square.prototype = Object.create(Physijs.BoxMesh.prototype);
 
-
+var hoverover = function(element) {
+    if (element.selected == undefined)return;
+    if (!element.selected) {
+        element.material.color.set (color_hovered);
+    };
+    
+}
+var hoverout = function(element) {
+    if (element.selected == undefined)return;
+    if (!element.selected) {
+        element.material.color.set (color_default);
+    };
+}
+var select = function(element) {
+    if (element.selected == undefined)return;
+    element.material.color.set (color_selected);
+    element.selected = true;
+}
+var deselect = function(element) {
+    if (element.selected == undefined)return;
+    element.material.color.set (color_default);
+    element.selected = false;
+}
