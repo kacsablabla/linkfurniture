@@ -93,7 +93,7 @@ function main_init() {
 
     // Table
     var table = new Physijs.BoxMesh(
-        new THREE.CubeGeometry(50, 1, 50),
+        new THREE.BoxGeometry(50, 1, 50),
         material,
         0, // mass
         { restitution: .2, friction: .8 }
@@ -333,12 +333,15 @@ function addShadowedLight( x, y, z, color, intensity ) {
 
 }
 
-function executecommand(){
+function executecommand(command){
 
-    var command = document.getElementById('command').value.split();
+    command = command ?  command.split() : document.getElementById('command').value.split();
+    console.log(command);
     switch(command[0]){
         case 'square':
-            scene.add(new Square());
+            var s = new Square();
+            objectgroup.push(s);
+            scene.add(s);
             break;
         case 'connect':
             bindedges();
@@ -350,6 +353,32 @@ function executecommand(){
 }
 
 function bindedges(){
+    var dir =  selectededges[0].getaxis();
+    var origin =selectededges[0].getposition();
+    var length = 10;
+    var hex = 0xffff00;
+
+    var arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
+    scene.add( arrowHelper );
+    arrowHelper.scale = 10;
+
+    var constraint = new Physijs.HingeConstraint(
+        selectededges[0].parent, // First object to be constrained
+         // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
+        origin, // point in the scene to apply the constraint
+        dir// Axis along which the hinge lies - in this case it is the X axis
+    );
+    constraint.scene = scene;
+    scene.addConstraint( constraint );
+    constraint.setLimits(
+        1, // minimum angle of motion, in radians
+        2, // maximum angle of motion, in radians
+        0.1, // applied as a factor to constraint error
+        0.0 // controls bounce at limit (0.0 == no bounce)
+    );
+    //constraint.enableAngularMotor( target_velocity, acceration_force );
+    //constraint.disableMotor();
+    /*
     var constraint = new Physijs.DOFConstraint(
         selectededges[0], // First object to be constrained
         selectededges[1], // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
@@ -364,6 +393,7 @@ function bindedges(){
     );
     //constraint.enableAngularMotor( target_velocity, acceration_force );
     //constraint.disableMotor();
+    */
 
 }
 function nail(mymesh){

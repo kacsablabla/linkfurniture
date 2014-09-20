@@ -77,7 +77,31 @@ Edge = function(a,b,parent) {
 
     this.log = function() {
         console.log('edge');
-    }
+    };
+
+    this.getaxis = function(){
+        var origin = new THREE.Vector3(0,0,0);
+        var axis = new THREE.Vector3(0,1,0);
+        origin = this.localToWorld( origin );
+        axis = this.localToWorld( axis );
+        axis = axis.sub(origin);
+        console.log('axis: '+axis.x + ',' + axis.y + ',' + axis.z);
+        return axis;
+    };
+
+    this.geteuler = function(){
+        var axis = new THREE.Euler (0,1,0);
+        axis.setFromRotationMatrix( this.matrixWorld );
+        console.log('euler: '+axis.x + ',' + axis.y + ',' + axis.z);
+        return axis;
+    };
+
+    this.getposition = function(){
+        var position = new THREE.Vector3();
+        position.setFromMatrixPosition( this.matrixWorld );
+        console.log('position: '+position.x + ',' + position.y + ',' + position.z);
+        return position;
+    };
 };
 
 
@@ -115,7 +139,7 @@ Square = function() {
     e2.position.x -=5;
     e3.rotation.z =Math.PI/2;
     e3.position.y +=5;
-    e4.rotation.z =-Math.PI/2;
+    e4.rotation.z =Math.PI/2;
     e4.position.y -=5;
 
     this.add(e1);
