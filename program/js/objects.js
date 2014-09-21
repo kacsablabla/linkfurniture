@@ -6,6 +6,7 @@ var unitZ = new THREE.Vector3( 0, 0, 1 );
 var color_default = 0x00ff00;
 var color_hovered = 0x008888;
 var color_selected = 0xff0000;
+var color_nailed = 0x888800;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture1.jpg");
 
 Element = function(geometry,material){
@@ -33,27 +34,7 @@ Element = function(geometry,material){
         this.material.color.set (color_default);
         this.selected = false;
     }
-    this.rotate =function(axis, angle){
-
-        oldRotationMatrix.extractRotation( this.matrix );
-        var quaternionXYZ = new THREE.Quaternion();
-        var quaternionX = new THREE.Quaternion();
-        var quaternionY = new THREE.Quaternion();
-        var quaternionZ = new THREE.Quaternion();
-        var quaternionE = new THREE.Quaternion();
-
-        quaternionXYZ.setFromRotationMatrix( oldRotationMatrix );
-        quaternionX.setFromAxisAngle( unitX, angle );
-        quaternionY.setFromAxisAngle( unitY, angle );
-        quaternionZ.setFromAxisAngle( unitZ, angle);
-
-        if ( axis == "X" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionX );
-        if ( axis == "Y" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionY );
-        if ( axis == "Z" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
-
-        this.quaternion.copy( quaternionXYZ );
-        this.updateMatrixWorld();
-    }
+    
 }
 
 //Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
@@ -70,7 +51,8 @@ Edge = function(a,b,parent) {
 
     this.parent = parent;
     this.neighbours = [];
-    Physijs.CylinderMesh.call(this,geometry,material);
+    this.constraint = undefined;
+    THREE.Mesh.call(this,geometry,material);
 
     this.selected = false;
     this.transformable = false;
@@ -81,7 +63,7 @@ Edge = function(a,b,parent) {
 
     this.getaxis = function(){
         var origin = new THREE.Vector3(0,0,0);
-        var axis = new THREE.Vector3(0,1,0);
+        var axis = new THREE.Vector3(0,5,0);
         origin = this.localToWorld( origin );
         axis = this.localToWorld( axis );
         axis = axis.sub(origin);
@@ -102,10 +84,14 @@ Edge = function(a,b,parent) {
         console.log('position: '+position.x + ',' + position.y + ',' + position.z);
         return position;
     };
+    this.getdefaultcolor = function(){
+        if (this.mass == 0) {return color_nailed}
+        else return color_default;
+    }
 };
 
 
-Edge.prototype = Object.create(Physijs.CylinderMesh.prototype);
+Edge.prototype = Object.create(THREE.Mesh.prototype);
 
 Square = function() {
 
@@ -153,9 +139,14 @@ Square = function() {
     this.edges.push(e4);
 
     
+    this.getdefaultcolor = function(){
+        if (this.mass == 0) {return color_nailed}
+        else return color_default;
+    }
     this.log = function() {
         console.log('square');
     }
+
 
 
 };
@@ -171,7 +162,7 @@ var hoverover = function(element) {
 var hoverout = function(element) {
     if (element.selected == undefined)return;
     if (!element.selected) {
-        element.material.color.set (color_default);
+        element.material.color.set (element.getdefaultcolor());
     };
 }
 var select = function(element) {
@@ -181,6 +172,27 @@ var select = function(element) {
 }
 var deselect = function(element) {
     if (element.selected == undefined)return;
-    element.material.color.set (color_default);
+    element.material.color.set (element.getdefaultcolor());
     element.selected = false;
+}
+var rotatearountaxis =function(element, axis, angle){
+
+    oldRotationMatrix.extractRotation( element.matrix );
+    var quaternionXYZ = new THREE.Quaternion();
+    var quaternionX = new THREE.Quaternion();
+    var quaternionY = new THREE.Quaternion();
+    var quaternionZ = new THREE.Quaternion();
+    var quaternionE = new THREE.Quaternion();
+
+    quaternionXYZ.setFromRotationMatrix( oldRotationMatrix );
+    quaternionX.setFromAxisAngle( unitX, angle );
+    quaternionY.setFromAxisAngle( unitY, angle );
+    quaternionZ.setFromAxisAngle( unitZ, angle);
+
+    if ( axis == "X" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionX );
+    if ( axis == "Y" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionY );
+    if ( axis == "Z" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
+
+    element.quaternion.copy( quaternionXYZ );
+    element.updateMatrixWorld();
 }

@@ -3,6 +3,7 @@
 
 var scene = new Physijs.Scene;//THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+var renderer = new THREE.WebGLRenderer();
 var objectgroup = [];
 var defaultmaterial = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200 } );
 //scene.add(objectgroup);
@@ -18,10 +19,11 @@ var mousemoved = false;
 var mousedragging = false;
 var selectededges = [];
 var canvas = document.getElementById('viewer');
+var gravity = new THREE.Vector3( 0, 0, 0 );
 
 function main_init() {
 
-    scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
+    scene.setGravity(gravity);
     /*
     scene.addEventListener(
             'update',
@@ -33,7 +35,7 @@ function main_init() {
 */
     projector = new THREE.Projector();
 
-    var renderer = new THREE.WebGLRenderer();
+    
     renderer.setSize( window.innerWidth, window.innerHeight );
     // renderer
 
@@ -339,12 +341,15 @@ function executecommand(command){
     console.log(command);
     switch(command[0]){
         case 'square':
+            //if (selectededges.length == 0)return;
             var s = new Square();
             objectgroup.push(s);
             scene.add(s);
+            //select (s.edges[0]);
+            //bindedges(selectededges[0],s.edges[0]);
             break;
         case 'connect':
-            bindedges();
+            bindedges(selectededges[0],selectededges[1]);
             break;
         case 'nail':
             nail(selectededges[0]);
@@ -352,30 +357,100 @@ function executecommand(command){
     }
 }
 
-function bindedges(){
-    var dir =  selectededges[0].getaxis();
-    var origin =selectededges[0].getposition();
+function bindedges(a,b){
+
+    if (b == undefined ) {
+        return;
+    };
+
+    /*
+    renderer.render( scene, camera );
+    var inverse = new THREE.Matrix4();
+    inverse.getInverse(b.matrix);
+    b.parent.applyMatrix(inverse);
+    b.parent.applyMatrix(a.matrix); 
+    */
+    //var inverse = new THREE.Matrix4();
+    //inverse.getInverse(b.matrix);
+    //b.parent.applyMatrix(inverse);
+
+  
+
+    if (!(a.parent.mass == 0 || b.parent.mass == 0)) {
+        //a.parent.mass = 0;
+    };
+    
+
+    //b.position.copy(origin);
+    //a.matrixWorld.copy(this.matrixWorld);
+    //b.parent.matrix = a.parent.matrix;
+    //b.parent.updateMatrix();
+    //b.parent.updateMatrixWorld();
+    var axisa =  a.getaxis();
+    var posa = a.getposition();
+    var pointa1 = posa.clone().sub(axisa);
+    var pointa2 = posa.clone().add(axisa);
+    axisa.multiplyScalar(0.5);
+
+    var axisb =  b.getaxis();
+    var posb = b.getposition();
+    var pointb1 = posb.clone().sub(axisb);
+    var pointb2 = posb.clone().add(axisb);
+
     var length = 10;
     var hex = 0xffff00;
 
-    var arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
+    var arrowHelper = new THREE.ArrowHelper( axisa, posa, length, hex );
     scene.add( arrowHelper );
     arrowHelper.scale = 10;
-
-    var constraint = new Physijs.HingeConstraint(
-        selectededges[0].parent, // First object to be constrained
-         // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
-        origin, // point in the scene to apply the constraint
-        dir// Axis along which the hinge lies - in this case it is the X axis
+    
+    //constraint1
+    var constraint1 = new Physijs.HingeConstraint(
+        a.parent, // First object to be constrained
+        b.parent, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
+        pointa1, // point in the scene to apply the constraint
+        axisa// Axis along which the hinge lies - in this case it is the X axis
     );
-    constraint.scene = scene;
-    scene.addConstraint( constraint );
-    constraint.setLimits(
-        1, // minimum angle of motion, in radians
-        2, // maximum angle of motion, in radians
-        0.1, // applied as a factor to constraint error
+    constraint1.positionb  = b.parent.worldToLocal(pointb1);//b.parent.worldToLocal(b.position.clone())// window.Phisijs.convertWorldPositionToObject( b.position, b.parent ).clone();
+    constraint1.scene = scene;
+    scene.addConstraint( constraint1 ,true);
+
+    constraint1.setLimits(
+        0, // minimum angle of motion, in radians
+        400, // maximum angle of motion, in radians
+        0.0, // applied as a factor to constraint error
         0.0 // controls bounce at limit (0.0 == no bounce)
     );
+
+    //constraint2
+    var constraint2 = new Physijs.HingeConstraint(
+        a.parent, // First object to be constrained
+        b.parent, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
+        pointa2, // point in the scene to apply the constraint
+        axisa// Axis along which the hinge lies - in this case it is the X axis
+    );
+    constraint2.positionb  = b.parent.worldToLocal(pointb2);//b.parent.worldToLocal(b.position.clone())// window.Phisijs.convertWorldPositionToObject( b.position, b.parent ).clone();
+    constraint2.scene = scene;
+    scene.addConstraint( constraint2 ,true);
+
+    constraint2.setLimits(
+        0, // minimum angle of motion, in radians
+        400, // maximum angle of motion, in radians
+        0.0, // applied as a factor to constraint error
+        0.0 // controls bounce at limit (0.0 == no bounce)
+    );
+
+
+    
+    
+    //constraint.disableMotor();
+    /*
+    a.neighbours.push(b);
+    a.constraint = constraint;
+    b.neighbours.push(a);
+    b.constraint = constraint;
+    */
+    //scene.simulate();
     //constraint.enableAngularMotor( target_velocity, acceration_force );
     //constraint.disableMotor();
     /*
@@ -397,11 +472,22 @@ function bindedges(){
 
 }
 function nail(mymesh){
+    if (mymesh.mass !=0){
+        mymesh.mass = 0;
+        mymesh.material.color.set (color_nailed);
+    }
+    else{
+        mymesh.mass = 5;
+        mymesh.material.color.set (color_default);
+    };
+    
+    /*
     var constraint = new Physijs.PointConstraint(
         mymesh, // First object to be constrained
-        new THREE.Vector3( 0, 10, 0 ) // point in the scene to apply the constraint
+        mymesh.position // point in the scene to apply the constraint
     );
     scene.addConstraint( constraint );
+    */
 
 }
 
@@ -415,395 +501,17 @@ function physicsswitch(){
     physicssimulation = !physicssimulation;
     if (physicssimulation) scene.onSimulationResume();
 }
-/*
 
-<script type="text/javascript">
+function gravityswitch(){
+    if (gravity.y == 0) {gravity.y = -7}
+    else {gravity.y = 0;}
     
-    'use strict';
+    scene.setGravity(gravity);
     
-    Physijs.scripts.worker = '../physijs_worker.js';
-    Physijs.scripts.ammo = 'examples/js/ammo.js';
-    
-    var initScene, initEventHandling, render, createTower,
-        renderer, render_stats, physics_stats, scene, dir_light, am_light, camera,
-        table, blocks = [], table_material, block_material, intersect_plane,
-        selected_block = null, mouse_position = new THREE.Vector3, block_offset = new THREE.Vector3, _i, _v3 = new THREE.Vector3;
-    
-    initScene = function() {
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        renderer.shadowMapEnabled = true;
-        renderer.shadowMapSoft = true;
-        document.getElementById( 'viewport' ).appendChild( renderer.domElement );
-        
-        render_stats = new Stats();
-        render_stats.domElement.style.position = 'absolute';
-        render_stats.domElement.style.top = '1px';
-        render_stats.domElement.style.zIndex = 100;
-        document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
+}
 
-        physics_stats = new Stats();
-        physics_stats.domElement.style.position = 'absolute';
-        physics_stats.domElement.style.top = '50px';
-        physics_stats.domElement.style.zIndex = 100;
-        document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
-        
-        scene = new Physijs.Scene({ fixedTimeStep: 1 / 120 });
-        scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
-        scene.addEventListener(
-            'update',
-            function() {
-
-                if ( selected_block !== null ) {
-                    
-                    _v3.copy( mouse_position ).add( block_offset ).sub( selected_block.position ).multiplyScalar( 5 );
-                    _v3.y = 0;
-                    selected_block.setLinearVelocity( _v3 );
-                    
-                    // Reactivate all of the blocks
-                    _v3.set( 0, 0, 0 );
-                    for ( _i = 0; _i < blocks.length; _i++ ) {
-                        blocks[_i].applyCentralImpulse( _v3 );
-                    }
-                }
-
-                scene.simulate( undefined, 1 );
-                physics_stats.update();
-            }
-        );
-        
-        camera = new THREE.PerspectiveCamera(
-            35,
-            window.innerWidth / window.innerHeight,
-            1,
-            1000
-        );
-        camera.position.set( 25, 20, 25 );
-        camera.lookAt(new THREE.Vector3( 0, 7, 0 ));
-        scene.add( camera );
-        
-        // ambient light
-        am_light = new THREE.AmbientLight( 0x444444 );
-        scene.add( am_light );
-
-        // directional light
-        dir_light = new THREE.DirectionalLight( 0xFFFFFF );
-        dir_light.position.set( 20, 30, -5 );
-        dir_light.target.position.copy( scene.position );
-        dir_light.castShadow = true;
-        dir_light.shadowCameraLeft = -30;
-        dir_light.shadowCameraTop = -30;
-        dir_light.shadowCameraRight = 30;
-        dir_light.shadowCameraBottom = 30;
-        dir_light.shadowCameraNear = 20;
-        dir_light.shadowCameraFar = 200;
-        dir_light.shadowBias = -.001
-        dir_light.shadowMapWidth = dir_light.shadowMapHeight = 2048;
-        dir_light.shadowDarkness = .5;
-        scene.add( dir_light );
-        
-        // Materials
-        table_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/wood.jpg' ), ambient: 0xFFFFFF }),
-            .9, // high friction
-            .2 // low restitution
-        );
-        table_material.map.wrapS = table_material.map.wrapT = THREE.RepeatWrapping;
-        table_material.map.repeat.set( 5, 5 );
-        
-        block_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/plywood.jpg' ), ambient: 0xFFFFFF }),
-            .4, // medium friction
-            .4 // medium restitution
-        );
-        block_material.map.wrapS = block_material.map.wrapT = THREE.RepeatWrapping;
-        block_material.map.repeat.set( 1, .5 );
-        
-        // Table
-        table = new Physijs.BoxMesh(
-            new THREE.CubeGeometry(50, 1, 50),
-            table_material,
-            0, // mass
-            { restitution: .2, friction: .8 }
-        );
-        table.position.y = -.5;
-        table.receiveShadow = true;
-        scene.add( table );
-        
-        createTower();
-        
-        intersect_plane = new THREE.Mesh(
-            new THREE.PlaneGeometry( 150, 150 ),
-            new THREE.MeshBasicMaterial({ opacity: 0, transparent: true })
-        );
-        intersect_plane.rotation.x = Math.PI / -2;
-        scene.add( intersect_plane );
-
-        initEventHandling();
-        
-        requestAnimationFrame( render );
-        scene.simulate();
-    };
-    
-    render = function() {
-        requestAnimationFrame( render );
-        renderer.render( scene, camera );
-        render_stats.update();
-    };
-    
-    createTower = (function() {
-        var block_length = 6, block_height = 1, block_width = 1.5, block_offset = 2,
-            block_geometry = new THREE.CubeGeometry( block_length, block_height, block_width );
-        
-        return function() {
-            var i, j, rows = 16,
-                block;
-            
-            for ( i = 0; i < rows; i++ ) {
-                for ( j = 0; j < 3; j++ ) {
-                    block = new Physijs.BoxMesh( block_geometry, block_material );
-                    block.position.y = (block_height / 2) + block_height * i;
-                    if ( i % 2 === 0 ) {
-                        block.rotation.y = Math.PI / 2.01; // #TODO: There's a bug somewhere when this is to close to 2
-                        block.position.x = block_offset * j - ( block_offset * 3 / 2 - block_offset / 2 );
-                    } else {
-                        block.position.z = block_offset * j - ( block_offset * 3 / 2 - block_offset / 2 );
-                    }
-                    block.receiveShadow = true;
-                    block.castShadow = true;
-                    scene.add( block );
-                    blocks.push( block );
-                }
-            }
-        }
-    })();
-    
-    initEventHandling = (function() {
-        var _vector = new THREE.Vector3,
-            projector = new THREE.Projector(),
-            handleMouseDown, handleMouseMove, handleMouseUp;
-        
-        handleMouseDown = function( evt ) {
-            var ray, intersections;
-            
-            _vector.set(
-                ( evt.clientX / window.innerWidth ) * 2 - 1,
-                -( evt.clientY / window.innerHeight ) * 2 + 1,
-                1
-            );
-
-            projector.unprojectVector( _vector, camera );
-            
-            ray = new THREE.Raycaster( camera.position, _vector.sub( camera.position ).normalize() );
-            intersections = ray.intersectObjects( blocks );
-
-            if ( intersections.length > 0 ) {
-                selected_block = intersections[0].object;
-                
-                _vector.set( 0, 0, 0 );
-                selected_block.setAngularFactor( _vector );
-                selected_block.setAngularVelocity( _vector );
-                selected_block.setLinearFactor( _vector );
-                selected_block.setLinearVelocity( _vector );
-
-                mouse_position.copy( intersections[0].point );
-                block_offset.subVectors( selected_block.position, mouse_position );
-                
-                intersect_plane.position.y = mouse_position.y;
-            }
-        };
-        
-        handleMouseMove = function( evt ) {
-            
-            var ray, intersection,
-                i, scalar;
-            
-            if ( selected_block !== null ) {
-                
-                _vector.set(
-                    ( evt.clientX / window.innerWidth ) * 2 - 1,
-                    -( evt.clientY / window.innerHeight ) * 2 + 1,
-                    1
-                );
-                projector.unprojectVector( _vector, camera );
-                
-                ray = new THREE.Raycaster( camera.position, _vector.sub( camera.position ).normalize() );
-                intersection = ray.intersectObject( intersect_plane );
-                mouse_position.copy( intersection[0].point );
-            }
-            
-        };
-        
-        handleMouseUp = function( evt ) {
-            
-            if ( selected_block !== null ) {
-                _vector.set( 1, 1, 1 );
-                selected_block.setAngularFactor( _vector );
-                selected_block.setLinearFactor( _vector );
-                
-                selected_block = null;
-            }
-            
-        };
-        
-        return function() {
-            renderer.domElement.addEventListener( 'mousedown', handleMouseDown );
-            renderer.domElement.addEventListener( 'mousemove', handleMouseMove );
-            renderer.domElement.addEventListener( 'mouseup', handleMouseUp );
-        };
-    })();
-    
-    window.onload = initScene;
-    
-    </script>
+function changed(){
+    alert('changed');
+}
 
 
-<script type="text/javascript">
-    
-    'use strict';
-    
-    Physijs.scripts.worker = '../physijs_worker.js';
-    Physijs.scripts.ammo = 'examples/js/ammo.js';
-    
-    var initScene, render,
-        ground_material, car_material, wheel_material, wheel_geometry,
-        projector, renderer, render_stats, physics_stats, scene, ground_geometry, ground, light, camera,
-        car = {};
-    
-    initScene = function() {
-        projector = new THREE.Projector;
-        
-        
-        scene = new Physijs.Scene;
-        scene.setGravity(new THREE.Vector3( 0, -30, 0 ));
-        scene.addEventListener(
-            'update',
-            function() {
-                scene.simulate( undefined, 2 );
-                physics_stats.update();
-            }
-        );
-        
-        
-        // Materials
-        ground_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'images/rocks.jpg' ) }),
-            .8, // high friction
-            .4 // low restitution
-        );
-        ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
-        ground_material.map.repeat.set( 3, 3 );
-        
-        // Ground
-        ground = new Physijs.BoxMesh(
-            new THREE.CubeGeometry(100, 1, 100),
-            ground_material,
-            0 // mass
-        );
-        ground.receiveShadow = true;
-        scene.add( ground );
-        
-        
-        // Car
-        car_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({ color: 0xff6666 }),
-            .8, // high friction
-            .2 // low restitution
-        );
-        
-        wheel_material = Physijs.createMaterial(
-            new THREE.MeshLambertMaterial({ color: 0x444444 }),
-            .8, // high friction
-            .5 // medium restitution
-        );
-        wheel_geometry = new THREE.CylinderGeometry( 2, 2, 1, 8 );
-        
-        car.body = new Physijs.BoxMesh(
-            new THREE.CubeGeometry( 10, 5, 7 ),
-            car_material,
-            1000
-        );
-        car.body.position.y = 10;
-        car.body.receiveShadow = car.body.castShadow = true;
-        scene.add( car.body );
-        
-        car.wheel_fl = new Physijs.CylinderMesh(
-            wheel_geometry,
-            wheel_material,
-            500
-        );
-        car.wheel_fl.rotation.x = Math.PI / 2;
-        car.wheel_fl.position.set( -3.5, 6.5, 5 );
-        car.wheel_fl.receiveShadow = car.wheel_fl.castShadow = true;
-        scene.add( car.wheel_fl );
-        car.wheel_fl_constraint = new Physijs.DOFConstraint(
-            car.wheel_fl, car.body, new THREE.Vector3( -3.5, 6.5, 5 )
-        );
-        scene.addConstraint( car.wheel_fl_constraint );
-        car.wheel_fl_constraint.setAngularLowerLimit({ x: 0, y: -Math.PI / 8, z: 1 });
-        car.wheel_fl_constraint.setAngularUpperLimit({ x: 0, y: Math.PI / 8, z: 0 });
-        
-        car.wheel_fr = new Physijs.CylinderMesh(
-            wheel_geometry,
-            wheel_material,
-            500
-        );
-        car.wheel_fr.rotation.x = Math.PI / 2;
-        car.wheel_fr.position.set( -3.5, 6.5, -5 );
-        car.wheel_fr.receiveShadow = car.wheel_fr.castShadow = true;
-        scene.add( car.wheel_fr );
-        car.wheel_fr_constraint = new Physijs.DOFConstraint(
-            car.wheel_fr, car.body, new THREE.Vector3( -3.5, 6.5, -5 )
-        );
-        scene.addConstraint( car.wheel_fr_constraint );
-        car.wheel_fr_constraint.setAngularLowerLimit({ x: 0, y: -Math.PI / 8, z: 1 });
-        car.wheel_fr_constraint.setAngularUpperLimit({ x: 0, y: Math.PI / 8, z: 0 });
-        
-        car.wheel_bl = new Physijs.CylinderMesh(
-            wheel_geometry,
-            wheel_material,
-            500
-        );
-        car.wheel_bl.rotation.x = Math.PI / 2;
-        car.wheel_bl.position.set( 3.5, 6.5, 5 );
-        car.wheel_bl.receiveShadow = car.wheel_bl.castShadow = true;
-        scene.add( car.wheel_bl );
-        car.wheel_bl_constraint = new Physijs.DOFConstraint(
-            car.wheel_bl, car.body, new THREE.Vector3( 3.5, 6.5, 5 )
-        );
-        scene.addConstraint( car.wheel_bl_constraint );
-        car.wheel_bl_constraint.setAngularLowerLimit({ x: 0, y: 0, z: 0 });
-        car.wheel_bl_constraint.setAngularUpperLimit({ x: 0, y: 0, z: 0 });
-        
-        car.wheel_br = new Physijs.CylinderMesh(
-            wheel_geometry,
-            wheel_material,
-            500
-        );
-        car.wheel_br.rotation.x = Math.PI / 2;
-        car.wheel_br.position.set( 3.5, 6.5, -5 );
-        car.wheel_br.receiveShadow = car.wheel_br.castShadow = true;
-        scene.add( car.wheel_br );
-        car.wheel_br_constraint = new Physijs.DOFConstraint(
-            car.wheel_br, car.body, new THREE.Vector3( 3.5, 6.5, -5 )
-        );
-        scene.addConstraint( car.wheel_br_constraint );
-        car.wheel_br_constraint.setAngularLowerLimit({ x: 0, y: 0, z: 0 });
-        car.wheel_br_constraint.setAngularUpperLimit({ x: 0, y: 0, z: 0 });
-        
-        
-        
-        requestAnimationFrame( render );
-        scene.simulate();
-    };
-    
-    render = function() {
-        requestAnimationFrame( render );
-        renderer.render( scene, camera );
-        render_stats.update();
-    };
-    
-    window.onload = initScene;
-    
-    </script>
-*/

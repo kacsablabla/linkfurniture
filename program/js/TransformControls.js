@@ -712,6 +712,9 @@
 
 			this.gizmo[_mode].highlight( scope.axis );
 
+			scope.object.__dirtyPosition = true;
+            scope.object.__dirtyRotation = true;
+
 		};
 
 		function onPointerHover( event ) {
@@ -921,6 +924,8 @@
 					if ( scope.axis == "Z" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
 
 					scope.object.quaternion.copy( quaternionXYZ );
+
+					
 
 				} else if ( scope.space == "world" ) {
 
