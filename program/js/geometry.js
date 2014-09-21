@@ -362,18 +362,6 @@ function bindedges(a,b){
     if (b == undefined ) {
         return;
     };
-
-    /*
-    renderer.render( scene, camera );
-    var inverse = new THREE.Matrix4();
-    inverse.getInverse(b.matrix);
-    b.parent.applyMatrix(inverse);
-    b.parent.applyMatrix(a.matrix); 
-    */
-    //var inverse = new THREE.Matrix4();
-    //inverse.getInverse(b.matrix);
-    //b.parent.applyMatrix(inverse);
-
   
 
     if (!(a.parent.mass == 0 || b.parent.mass == 0)) {
@@ -381,11 +369,6 @@ function bindedges(a,b){
     };
     
 
-    //b.position.copy(origin);
-    //a.matrixWorld.copy(this.matrixWorld);
-    //b.parent.matrix = a.parent.matrix;
-    //b.parent.updateMatrix();
-    //b.parent.updateMatrixWorld();
     var axisa =  a.getaxis();
     var posa = a.getposition();
     var pointa1 = posa.clone().sub(axisa);
@@ -397,6 +380,15 @@ function bindedges(a,b){
     var pointb1 = posb.clone().sub(axisb);
     var pointb2 = posb.clone().add(axisb);
 
+    var simpledistancesum = pointa1.distanceToSquared(pointb1)+pointa2.distanceToSquared(pointb2);
+    var crossdistancesum = pointa1.distanceToSquared(pointb2)+pointa2.distanceToSquared(pointb1);
+
+    if (crossdistancesum < simpledistancesum) {
+        var temp = pointb1;
+        pointb1 = pointb2;
+        pointb2 = temp;
+    };
+
     var length = 10;
     var hex = 0xffff00;
 
@@ -405,70 +397,27 @@ function bindedges(a,b){
     arrowHelper.scale = 10;
     
     //constraint1
-    var constraint1 = new Physijs.HingeConstraint(
+    var constraint1 = new Physijs.PointConstraint(
         a.parent, // First object to be constrained
         b.parent, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
-        pointa1, // point in the scene to apply the constraint
-        axisa// Axis along which the hinge lies - in this case it is the X axis
+        pointa1 // point in the scene to apply the constraint
     );
     constraint1.positionb  = b.parent.worldToLocal(pointb1);//b.parent.worldToLocal(b.position.clone())// window.Phisijs.convertWorldPositionToObject( b.position, b.parent ).clone();
     constraint1.scene = scene;
     scene.addConstraint( constraint1 ,true);
 
-    constraint1.setLimits(
-        0, // minimum angle of motion, in radians
-        400, // maximum angle of motion, in radians
-        0.0, // applied as a factor to constraint error
-        0.0 // controls bounce at limit (0.0 == no bounce)
-    );
-
     //constraint2
-    var constraint2 = new Physijs.HingeConstraint(
+    var constraint2 = new Physijs.PointConstraint(
         a.parent, // First object to be constrained
         b.parent, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
-        pointa2, // point in the scene to apply the constraint
-        axisa// Axis along which the hinge lies - in this case it is the X axis
+        pointa2 // point in the scene to apply the constraint
     );
     constraint2.positionb  = b.parent.worldToLocal(pointb2);//b.parent.worldToLocal(b.position.clone())// window.Phisijs.convertWorldPositionToObject( b.position, b.parent ).clone();
     constraint2.scene = scene;
     scene.addConstraint( constraint2 ,true);
 
-    constraint2.setLimits(
-        0, // minimum angle of motion, in radians
-        400, // maximum angle of motion, in radians
-        0.0, // applied as a factor to constraint error
-        0.0 // controls bounce at limit (0.0 == no bounce)
-    );
-
 
     
-    
-    //constraint.disableMotor();
-    /*
-    a.neighbours.push(b);
-    a.constraint = constraint;
-    b.neighbours.push(a);
-    b.constraint = constraint;
-    */
-    //scene.simulate();
-    //constraint.enableAngularMotor( target_velocity, acceration_force );
-    //constraint.disableMotor();
-    /*
-    var constraint = new Physijs.DOFConstraint(
-        selectededges[0], // First object to be constrained
-        selectededges[1], // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
-        new THREE.Vector3( 0, 10, 0 ) // point in the scene to apply the constraint
-        //new THREE.Vector3( 1, 0, 0 ) // Axis along which the hinge lies - in this case it is the X axis
-    );
-    scene.addConstraint( constraint );
-
-    constraint.setLimits(
-        90, // minimum angle of motion, in radians
-        270 // maximum angle of motion, in radians
-    );
-    //constraint.enableAngularMotor( target_velocity, acceration_force );
-    //constraint.disableMotor();
-    */
 
 }
 function nail(mymesh){

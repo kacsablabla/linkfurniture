@@ -8,6 +8,8 @@ var color_hovered = 0x008888;
 var color_selected = 0xff0000;
 var color_nailed = 0x888800;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture1.jpg");
+var cornerradius = 0.5;
+var edgelength = 10;
 
 Element = function(geometry,material){
 
@@ -41,7 +43,7 @@ Element = function(geometry,material){
 
 Edge = function(a,b,parent) {
 
-    var geometry =  new THREE.CylinderGeometry(0.3, 0.3, 10, 10, 1);
+    var geometry =  new THREE.CylinderGeometry(cornerradius, cornerradius, edgelength+2*cornerradius, 13, 1);
     
     var material = new THREE.MeshBasicMaterial({
         color: 0x00ff00, 
@@ -63,7 +65,7 @@ Edge = function(a,b,parent) {
 
     this.getaxis = function(){
         var origin = new THREE.Vector3(0,0,0);
-        var axis = new THREE.Vector3(0,5,0);
+        var axis = new THREE.Vector3(0,edgelength/2+cornerradius,0);
         origin = this.localToWorld( origin );
         axis = this.localToWorld( axis );
         axis = axis.sub(origin);
@@ -96,7 +98,7 @@ Edge.prototype = Object.create(THREE.Mesh.prototype);
 Square = function() {
 
     
-    var geometry =  new THREE.BoxGeometry(10, 10, 0.5);//new THREE.Geometry();
+    var geometry =  new THREE.BoxGeometry(edgelength, edgelength, cornerradius*2);//new THREE.Geometry();
     //var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture1.jpg");
     var v1 = new THREE.Vector3( 10.0,  10.0, 0.0),
         v2 = new THREE.Vector3( 10.0,  0.0, 0.0),
@@ -121,12 +123,12 @@ Square = function() {
         e2 = new Edge(v2,v3,this),
         e3 = new Edge(v3,v4,this),
         e4 = new Edge(v4,v1,this);
-    e1.position.x +=5;
-    e2.position.x -=5;
+    e1.position.x +=edgelength/2+cornerradius;
+    e2.position.x -=edgelength/2+cornerradius;
     e3.rotation.z =Math.PI/2;
-    e3.position.y +=5;
+    e3.position.y +=edgelength/2+cornerradius;
     e4.rotation.z =Math.PI/2;
-    e4.position.y -=5;
+    e4.position.y -=edgelength/2+cornerradius;
 
     this.add(e1);
     this.add(e2);
