@@ -7,10 +7,10 @@ var renderer = new THREE.WebGLRenderer();
 var objectgroup = [];
 var defaultmaterial = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200 } );
 //scene.add(objectgroup);
+var physicssimulationcounter = 500;
 var physicssimulation = false;
 var currentIntersected,raycaster;
 var mouse = new THREE.Vector2();
-var radius = 100, theta = 0;
 var orbitcontrol;
 var transformcontrol;
 var controllee;
@@ -25,15 +25,38 @@ var gravity = new THREE.Vector3( 0, 0, 0 );
 function main_init() {
 
     scene.setGravity(gravity);
-    /*
+    
     scene.addEventListener(
-            'update',
-            function() {
-                scene.simulate( undefined, 2 );
-                //physics_stats.update();
-            }
-        );
-*/
+        'update',
+        function() {
+            physicssimulationcounter--;
+            if (physicssimulationcounter <=0) {
+                physicssimulation = false;
+            };
+            if (true || controllee != undefined)
+                for (var i = objectgroup.length - 1; i >= 0; i--) {
+                    var obj = objectgroup[i]
+                    if (obj instanceof Square){
+
+                        //obj.setAngularFactor(new THREE.Vector3(0.8,0.8,0.8));
+                        //obj.setLinearFactor(new THREE.Vector3(0.8,0.8,0.8));
+                         
+                        var linear = obj.getLinearVelocity();
+                        obj.setLinearVelocity(linear.multiplyScalar(0.9));
+
+                        var angular = obj.getAngularVelocity();
+                        obj.setAngularVelocity(angular.multiplyScalar(0.9));
+
+                        //obj.setLinearVelocity(obj.getLinearVelocity().multiplyScalar(0.95));
+                    }
+                    
+                };
+                
+            //physics_stats.update();
+        }
+    );
+    
+
     projector = new THREE.Projector();
 
     
@@ -350,10 +373,11 @@ function executecommand(command){
             s.initconstraints();
             //select (s.edges[0]);
             //bindedges(selectededges[0],s.edges[0]);
+            
             break;
         case 'connect':
             if (selectededges.length == 2)
-                connectcorners(selectededges[0],selectededges[1]);
+                connectedges(selectededges[0],selectededges[1]);
             else if (selectedcorners.length == 2) 
                 connectcorners(selectedcorners[0],selectedcorners[1]);
             //bindedges(selectededges[0],selectededges[1]);
@@ -362,8 +386,10 @@ function executecommand(command){
             nail(selectededges[0]);
             break;
         case 'disconnect':
-            if (selectedcorners.length = 1 && controllee != undefined)
+            if (selectedcorners.length == 1 && controllee != undefined)
                 disconnectcorners(selectedcorners[0],controllee);
+            else if (selectededges.length == 1 && controllee != undefined)
+                disconnectedges(selectededges[0],controllee);
             break;
     }
 }
@@ -379,14 +405,15 @@ function deselectcorners(){
     for (var i = selectedcorners.length - 1; i >= 0; i--) {
         deselect(selectedcorners[i]);
     };
-
     selectedcorners = [];
 }
 
 function connectcorners(a,b){
-    if (a.movetoscene()) 
+    var amoved = a.movetoscene();
+    var bmoved = b.movetoscene();
+    if (amoved) 
         objectgroup.push(a);
-    if (b.movetoscene()) 
+    if (bmoved) 
         objectgroup.push(b);
     var constraint;
     var key;
@@ -405,6 +432,14 @@ function connectcorners(a,b){
 
         a.faces[key] = constraint;
     };
+    for (var i = b.edges.length - 1; i >= 0; i--) {
+        var edge = b.edges[i];
+        a.edges.push(edge);
+        edge.corners.remove(b);
+        edge.corners.push(a);
+        //var othercorner = edge.getothercorner(a);
+        //if (othercorner.parent == scene)
+    };
     b.faces = {};
     scene.remove(b);
     for (var i = selectedcorners.length - 1; i >= 0; i--) {
@@ -421,9 +456,38 @@ function disconnectcorners(corner,face){
 
     var cornerid = face.corners[corner.id];
     delete face.corners[corner.id];
-    face.addcorner(cornerid);
+    var newcorner = face.addcorner(cornerid);
+
+    for (var i = face.edges.length - 1; i >= 0; i--) {
+        var edge = face.edges[i];
+        var index = edge.corners.indexOf(corner);
+        if (index >= 0){
+            newcorner.edges.push(edge);
+            edge.corners.push(newcorner);
+            edge.corners.splice(index,1);
+        }
+        //var othercorner = edge.getothercorner(a);
+        //if (othercorner.parent == scene)
+    };
 
 
+}
+
+function connectedges(a,b){
+    var a1 = a.corners[0] ;
+    var a2 = a.corners[1] ;
+    var b1 = b.corners[0] ;
+    var b2 = b.corners[1] ;
+    connectcorners (a1,b1);
+    connectcorners (a2,b2);
+
+}
+
+function disconnectedges(a,b){
+    var c1 = a.corners[0] ;
+    var c2 = a.corners[1] ;
+    disconnectcorners (c1,b);
+    disconnectcorners (c2,b);
 }
 
 function bindedges(a,b){
@@ -457,9 +521,9 @@ function bindedges(a,b){
         pointb1 = pointb2;
         pointb2 = temp;
     };
-
     var length = 10;
     var hex = 0xffff00;
+
 
     var arrowHelper = new THREE.ArrowHelper( axisa, posa, length, hex );
     scene.add( arrowHelper );
@@ -515,6 +579,7 @@ function physicsswitch(){
             objectgroup[i].__dirtyPosition = true;
             objectgroup[i].__dirtyRotation = true;
         };
+        physicssimulationcounter = 500;
     };
     physicssimulation = !physicssimulation;
     if (physicssimulation) scene.onSimulationResume();

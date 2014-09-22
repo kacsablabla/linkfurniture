@@ -21,7 +21,7 @@ Element = function(geometry,material){
 
 //Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
 
-Edge = function(parent) {
+Edge = function(c1,c2,parent) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
 
@@ -33,12 +33,16 @@ Edge = function(parent) {
         side:THREE.DoubleSide
     });
 
-    this.corners = {};
+    this.corners = [c1,c2];
     Physijs.CylinderMesh.call(this,geometry,material);
 
     this.selected = false;
     this.transformable = false;
 
+    this.othercorner = function(corner){
+        if (this.corners[0] == corner)return this.corners[1];
+        return this.corners[0];
+    }
     this.log = function() {
         console.log('edge');
     };
@@ -116,7 +120,7 @@ Corner = function(parent) {
     this.selected = false;
     this.transformable = false;
 
-    this.edges = {};
+    this.edges = [];
     this.faces = {};
 
     Physijs.SphereMesh.call(this,geometry,material);
@@ -165,7 +169,7 @@ Square = function() {
     this.transformable = true; 
     
     this.corners = {};
-    this.edges = {};
+    this.edges = [];
     
     this.getdefaultcolor = function(){
         if (this.mass == 0) {return color_nailed}
@@ -177,10 +181,10 @@ Square = function() {
 
     this.initconstraints = function(){
     
-    this.addcorner('1');
-    this.addcorner('2');
-    this.addcorner('3');
-    this.addcorner('4');
+    var c1 = this.addcorner('1');
+    var c2 = this.addcorner('2');
+    var c3 = this.addcorner('3');
+    var c4 = this.addcorner('4');
 
     
     //constraints
@@ -195,10 +199,10 @@ Square = function() {
     scene.addConstraint( constraint );
     */
     
-    var e1 = new Edge(this);
-    var e2 = new Edge(this);
-    var e3 = new Edge(this);
-    var e4 = new Edge(this);
+    var e1 = new Edge(c1,c2,this);
+    var e2 = new Edge(c2,c3,this);
+    var e3 = new Edge(c3,c4,this);
+    var e4 = new Edge(c4,c1,this);
 
     e1.rotation.z =Math.PI/2;   
     e1.position.y +=edgelength/2+cornerradius;
@@ -212,6 +216,28 @@ Square = function() {
     this.add(e2);
     this.add(e3);
     this.add(e4);
+
+/*
+    this.edges[e1.id] = e1;
+    this.edges[e2.id] = e2;
+    this.edges[e3.id] = e3;
+    this.edges[e4.id] = e4;
+    */
+    this.edges.push(e1);
+    this.edges.push(e2);
+    this.edges.push(e3);
+    this.edges.push(e4);
+
+    c1.edges.push[e1];
+    c1.edges.push[e4];
+    c2.edges.push[e1];
+    c2.edges.push[e2];
+    c3.edges.push[e2];
+    c3.edges.push[e3];
+    c4.edges.push[e3];
+    c4.edges.push[e4];
+
+
 
     /*
     e1.addToCorners(c1,c2,this);
@@ -252,6 +278,7 @@ Square = function() {
         }
         this.corners[c.id] = name;
         this.add(c);
+        return c;
     }
 
 
