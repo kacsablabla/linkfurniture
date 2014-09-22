@@ -18,6 +18,7 @@ var mousedown = false;
 var mousemoved = false;
 var mousedragging = false;
 var selectededges = [];
+var selectedcorners = [];
 var canvas = document.getElementById('viewer');
 var gravity = new THREE.Vector3( 0, 0, 0 );
 
@@ -161,6 +162,7 @@ function main_init() {
     var square1 = new Square();
     objectgroup.push(square1);
     scene.add(square1);
+    square1.initconstraints();
     
 
     camera.position.z =8;
@@ -258,10 +260,8 @@ function main_init() {
 function onDocumentMouseClick(){
     if (!mousemoved) {
         if (currentIntersected == undefined) {
-            for (var i = selectededges.length - 1; i >= 0; i--) {
-                deselect(selectededges[i]);
-            };
-            selectededges = [];
+            deselectcorners();
+            deselectedges();
             transformcontrol.detach(controllee)
             controllee = null;
             orbitcontrol.enabled = true;
@@ -273,8 +273,10 @@ function onDocumentMouseClick(){
         }
         else{
             select(currentIntersected);
-            selectededges.push(currentIntersected);
-        }
+            if (currentIntersected instanceof Edge) selectededges.push(currentIntersected);
+            else if (currentIntersected instanceof Corner) selectedcorners.push(currentIntersected);
+            
+            }
         ;
     };
     
@@ -345,16 +347,83 @@ function executecommand(command){
             var s = new Square();
             objectgroup.push(s);
             scene.add(s);
+            s.initconstraints();
             //select (s.edges[0]);
             //bindedges(selectededges[0],s.edges[0]);
             break;
         case 'connect':
-            bindedges(selectededges[0],selectededges[1]);
+            if (selectededges.length == 2)
+                connectcorners(selectededges[0],selectededges[1]);
+            else if (selectedcorners.length == 2) 
+                connectcorners(selectedcorners[0],selectedcorners[1]);
+            //bindedges(selectededges[0],selectededges[1]);
             break;
         case 'nail':
             nail(selectededges[0]);
             break;
+        case 'disconnect':
+            if (selectedcorners.length = 1 && controllee != undefined)
+                disconnectcorners(selectedcorners[0],controllee);
+            break;
     }
+}
+
+function deselectedges(){
+    for (var i = selectededges.length - 1; i >= 0; i--) {
+        deselect(selectededges[i]);
+    };
+    selectededges = [];
+}
+function deselectcorners(){
+
+    for (var i = selectedcorners.length - 1; i >= 0; i--) {
+        deselect(selectedcorners[i]);
+    };
+
+    selectedcorners = [];
+}
+
+function connectcorners(a,b){
+    if (a.movetoscene()) 
+        objectgroup.push(a);
+    if (b.movetoscene()) 
+        objectgroup.push(b);
+    var constraint;
+    var key;
+    for (var i = Object.keys(b.faces).length - 1; i >= 0; i--) {
+
+        key = Object.keys(b.faces)[i];
+        constraint = b.faces[key];
+        scene.removeConstraint(constraint);
+        var par = scene.getObjectById(parseInt(key),true);
+        constraint = new Physijs.PointConstraint(a, par ,a.position,b.position);
+        scene.addConstraint( constraint );
+        
+        var cornerid = par.corners[b.id];
+        delete par.corners[b.id];
+        par.corners[a.id] = cornerid;
+
+        a.faces[key] = constraint;
+    };
+    b.faces = {};
+    scene.remove(b);
+    for (var i = selectedcorners.length - 1; i >= 0; i--) {
+        deselect(selectedcorners[i]);
+    };
+    selectedcorners = [];
+
+}
+
+function disconnectcorners(corner,face){
+    var constraint = corner.faces[face.id];
+    scene.removeConstraint(constraint);
+    delete corner.faces[face.id];
+
+    var cornerid = face.corners[corner.id];
+    delete face.corners[corner.id];
+    face.addcorner(cornerid);
+
+
 }
 
 function bindedges(a,b){

@@ -147,23 +147,22 @@ window.Physijs = (function() {
 
 
 	// Constraints
-	Physijs.PointConstraint = function( objecta, objectb, position ) {
-		if ( position === undefined ) {
-			position = objectb;
-			objectb = undefined;
+	Physijs.PointConstraint = function( objecta, objectb, positiona, positionb ) {
+		if ( positionb === undefined ) {
+			console.log("warning, PointConstraint needs 4 parameters");
+			return;
 		}
 
 		this.type = 'point';
 		this.appliedImpulse = 0;
 		this.id = getObjectId();
 		this.objecta = objecta._physijs.id;
-		this.positiona = convertWorldPositionToObject( position, objecta ).clone();
+		this.positiona = convertWorldPositionToObject( positiona, objecta ).clone();
+		this.objectb = objectb._physijs.id;
+		this.positionb = convertWorldPositionToObject( positionb, objectb ).clone();
 
-		if ( objectb ) {
-			this.objectb = objectb._physijs.id;
-			this.positionb = convertWorldPositionToObject( position, objectb ).clone();
-		}
 	};
+	
 	Physijs.PointConstraint.prototype.getDefinition = function() {
 		return {
 			type: this.type,
