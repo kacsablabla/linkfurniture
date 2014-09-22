@@ -31,7 +31,7 @@ function main_init() {
         function() {
             physicssimulationcounter--;
             if (physicssimulationcounter <=0) {
-                physicssimulation = false;
+                //physicssimulation = false;
             };
             if (true || controllee != undefined)
                 for (var i = objectgroup.length - 1; i >= 0; i--) {
@@ -42,10 +42,10 @@ function main_init() {
                         //obj.setLinearFactor(new THREE.Vector3(0.8,0.8,0.8));
                          
                         var linear = obj.getLinearVelocity();
-                        obj.setLinearVelocity(linear.multiplyScalar(0.9));
+                        obj.setLinearVelocity(linear.multiplyScalar(0.98));
 
                         var angular = obj.getAngularVelocity();
-                        obj.setAngularVelocity(angular.multiplyScalar(0.9));
+                        obj.setAngularVelocity(angular.multiplyScalar(0.98));
 
                         //obj.setLinearVelocity(obj.getLinearVelocity().multiplyScalar(0.95));
                     }
@@ -249,15 +249,24 @@ function main_init() {
         raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
 
         var intersects = raycaster.intersectObjects( objectgroup, true);
+        var closestintersection;
+        for (var i = 0; intersects.length > i; i++) {
 
-        if ( intersects.length > 0 ) {
+            if (intersects[i].object.visible){
+
+                closestintersection = intersects[i].object;
+                break;
+            }
+        };
+
+        if ( closestintersection  ) {
 
             if ( currentIntersected !== undefined ) {
 
                 hoverout(currentIntersected);
             }
 
-            currentIntersected = intersects[ 0 ].object;
+            currentIntersected = closestintersection;
             hoverover(currentIntersected);
             
 
@@ -267,7 +276,6 @@ function main_init() {
 
                 hoverout(currentIntersected);
             }
-
             currentIntersected = undefined;
         }
             renderer.render( scene, camera );
@@ -297,7 +305,8 @@ function onDocumentMouseClick(){
         else{
             select(currentIntersected);
             if (currentIntersected instanceof Edge) selectededges.push(currentIntersected);
-            else if (currentIntersected instanceof Corner) selectedcorners.push(currentIntersected);
+            else if (currentIntersected instanceof Corner ||
+             currentIntersected instanceof CornerConnector) selectedcorners.push(currentIntersected);
             
             }
         ;
@@ -409,85 +418,46 @@ function deselectcorners(){
 }
 
 function connectcorners(a,b){
-    var amoved = a.movetoscene();
-    var bmoved = b.movetoscene();
-    if (amoved) 
-        objectgroup.push(a);
-    if (bmoved) 
-        objectgroup.push(b);
-    var constraint;
-    var key;
-    for (var i = Object.keys(b.faces).length - 1; i >= 0; i--) {
-
-        key = Object.keys(b.faces)[i];
-        constraint = b.faces[key];
-        scene.removeConstraint(constraint);
-        var par = scene.getObjectById(parseInt(key),true);
-        constraint = new Physijs.PointConstraint(a, par ,a.position,b.position);
-        scene.addConstraint( constraint );
-        
-        var cornerid = par.corners[b.id];
-        delete par.corners[b.id];
-        par.corners[a.id] = cornerid;
-
-        a.faces[key] = constraint;
-    };
-    for (var i = b.edges.length - 1; i >= 0; i--) {
-        var edge = b.edges[i];
-        a.edges.push(edge);
-        edge.corners.remove(b);
-        edge.corners.push(a);
-        //var othercorner = edge.getothercorner(a);
-        //if (othercorner.parent == scene)
-    };
-    b.faces = {};
-    scene.remove(b);
-    for (var i = selectedcorners.length - 1; i >= 0; i--) {
-        deselect(selectedcorners[i]);
-    };
-    selectedcorners = [];
-
+    deselectcorners();
+    var connectora = a.getconnector();
+    var connectorb = b.getconnector();
+    //return;
+    //connectorb.position.copy(connectora.position);
+    connectora.mergeWithConnector(connectorb);
+    scene.remove(connectorb);
 }
 
 function disconnectcorners(corner,face){
-    var constraint = corner.faces[face.id];
-    scene.removeConstraint(constraint);
-    delete corner.faces[face.id];
-
-    var cornerid = face.corners[corner.id];
-    delete face.corners[corner.id];
-    var newcorner = face.addcorner(cornerid);
-
-    for (var i = face.edges.length - 1; i >= 0; i--) {
-        var edge = face.edges[i];
-        var index = edge.corners.indexOf(corner);
-        if (index >= 0){
-            newcorner.edges.push(edge);
-            edge.corners.push(newcorner);
-            edge.corners.splice(index,1);
+   var connector = corner.getconnector();
+   var corner
+   for (var i = connector.corners.length - 1; i >= 0; i--) {
+       if (connector.corners[i].parent == face) {
+            corner = connector.corners[i];
+            break;
         }
-        //var othercorner = edge.getothercorner(a);
-        //if (othercorner.parent == scene)
-    };
-
-
+   };
+   if (connector.removecorner(corner)) corner.visible = true;
+   
+   
 }
 
 function connectedges(a,b){
-    var a1 = a.corners[0] ;
-    var a2 = a.corners[1] ;
-    var b1 = b.corners[0] ;
-    var b2 = b.corners[1] ;
-    connectcorners (a1,b1);
-    connectcorners (a2,b2);
+  var a1 = a.corners[0];
+  var a2 = a.corners[1];
+  var b1 = b.corners[0];
+  var b2 = b.corners[1];
 
+  connectcorners(a1,b1);
+  connectcorners(a2,b2);
 }
 
 function disconnectedges(a,b){
-    var c1 = a.corners[0] ;
-    var c2 = a.corners[1] ;
-    disconnectcorners (c1,b);
-    disconnectcorners (c2,b);
+
+  var a1 = a.corners[0];
+  var a2 = a.corners[1];
+
+  disconnectcorners(a1,b);
+  disconnectcorners(a2,b);
 }
 
 function bindedges(a,b){

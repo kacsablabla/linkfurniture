@@ -11,14 +11,89 @@ var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture1.jpg");
 var cornerradius = 0.5;
 var edgelength = 10;
 
-Element = function(geometry,material){
+
+CornerConnector = function(){
+    
+    var geometry =  new THREE.SphereGeometry( cornerradius);
+    
+    var material = new THREE.MeshBasicMaterial({
+        color: 0x00ff00, 
+        map:texture,
+        side:THREE.DoubleSide
+    });
 
     this.selected = false;
-    this.transformable = true; 
-    Physijs.BoxMesh.call(this,geometry,material,5);
-    
+    this.transformable = false;
+
+    this.constraints = {};
+    this.corners = [];
+
+    Physijs.SphereMesh.call(this,geometry,material);
+
+    this.addcorner = function(corner,constraint){
+        this.constraints[corner.id] = constraint;
+    }
+
+    this.removecorner = function(corner){
+        var constraint = this.constraints[corner.id];
+        if (constraint == undefined) return false;
+        corner.connector = undefined;
+        scene.removeConstraint(constraint);
+        var index = this.corners.indexOf(corner);
+        if (index <0) return;
+        this.corners.splice(index,1);
+        delete this.constraints[corner.id];
+        return true;
+    }
+
+    this.getconnector = function(){return this};
+    this.mergeWithConnector = function(otherconnector){
+        var corner;
+        var constraint;
+        while((corner = otherconnector.corners.pop()) != null){
+            constraint = otherconnector.constraints[corner.id];
+            scene.removeConstraint(constraint);
+            var newconstraint = corner.connecttoconnector(this);
+            this.addcorner(corner,newconstraint);
+        }
+        otherconnector.constraints = {};
+        otherconnector.corners = [];
+    }
+    this.clearconnector = function(){
+        for (var i = this.corners.length - 1; i >= 0; i--) {
+            var corner = this.corners[i];
+            var constraint = this.constraints[corner.id];
+        };
+    }
+
+    this.getdefaultcolor = function(){
+        if (this.mass == 0) {return color_nailed}
+        else return color_default;
+    }
+
 }
 
+CornerConnector.prototype = Object.create(Physijs.SphereMesh.prototype);
+
+EdgeConnector = function(){
+
+    var geometry =  new THREE.CylinderGeometry(cornerradius, cornerradius, edgelength, 13, 1);
+    
+    var material = new THREE.MeshBasicMaterial({
+        color: 0x00ff00, 
+        map:texture,
+        side:THREE.DoubleSide
+    });
+
+    Physijs.CylinderMesh.call(this,geometry,material);
+
+    this.getdefaultcolor = function(){
+        if (this.mass == 0) {return color_nailed}
+        else return color_default;
+    }
+}
+
+EdgeConnector.prototype = Object.create(Physijs.CylinderMesh.prototype);
 //Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
 
 Edge = function(c1,c2,parent) {
@@ -88,22 +163,12 @@ Edge = function(c1,c2,parent) {
         if (this.mass == 0) {return color_nailed}
         else return color_default;
     }
-    this.movetoscene = function(){
-        if (this.parent != scene) {
-            var temppar = this.parent;
-            THREE.SceneUtils.detach( this, temppar, scene );
-
-            constraint = new Physijs.PointConstraint(this, temppar, this.position ,this.position);
-            scene.addConstraint( constraint );
-            this.parent = scene;
-            return true;
-        };
-        return false;
-    }
 };
 
 
 Edge.prototype = Object.create(Physijs.CylinderMesh.prototype);
+
+
 
 Corner = function(parent) {
 
@@ -119,14 +184,11 @@ Corner = function(parent) {
 
     this.selected = false;
     this.transformable = false;
+    this.connector = undefined;
 
-    this.edges = [];
-    this.faces = {};
+    THREE.Mesh.call(this,geometry,material);
 
-    Physijs.SphereMesh.call(this,geometry,material);
 
-    this.selected = false;
-    this.transformable = false;
 
     this.log = function() {
         console.log('corner');
@@ -136,23 +198,30 @@ Corner = function(parent) {
         if (this.mass == 0) {return color_nailed}
         else return color_default;
     }
-    this.movetoscene = function(){
-        if (this.parent != scene) {
-            var temppar = this.parent;
-            THREE.SceneUtils.detach( this, temppar, scene );
 
-            constraint = new Physijs.PointConstraint(this, temppar, this.position,this.position );
-            scene.addConstraint( constraint );
-            this.parent = scene;
-            this.faces[temppar.id] = constraint;
-            return true;
+    this.getconnector = function(){
+        if (this.connector == undefined) {
+            var connector = new CornerConnector();
+            scene.add(connector);
+            objectgroup.push(connector);
+            connector.position.copy(this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position)));
+            this.visible = false;
+            constraint = this.connecttoconnector(connector);
         };
-        return false;
+        return this.connector;
+    }
+    this.connecttoconnector = function(connector){
+        this.connector = connector;
+        var constraint = new Physijs.PointConstraint(connector,this.parent, connector.position,this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position) ));
+        scene.addConstraint(constraint);
+        connector.corners.push(this);
+        connector.constraints[this.id] = constraint;
+        return constraint;
     }
 };
 
 
-Corner.prototype = Object.create(Physijs.SphereMesh.prototype);
+Corner.prototype = Object.create(THREE.Mesh.prototype);
 
 Square = function() {
 
@@ -228,14 +297,7 @@ Square = function() {
     this.edges.push(e3);
     this.edges.push(e4);
 
-    c1.edges.push[e1];
-    c1.edges.push[e4];
-    c2.edges.push[e1];
-    c2.edges.push[e2];
-    c3.edges.push[e2];
-    c3.edges.push[e3];
-    c4.edges.push[e3];
-    c4.edges.push[e4];
+    
 
 
 
