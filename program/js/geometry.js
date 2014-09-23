@@ -2,8 +2,9 @@
 
 
 var scene = new Physijs.Scene;//THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-var renderer = new THREE.WebGLRenderer();
+var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
+//var renderer = new THREE.WebGLRenderer();
+var renderer //= new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
 var objectgroup = [];
 var defaultmaterial = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200 } );
 //scene.add(objectgroup);
@@ -23,7 +24,9 @@ var canvas = document.getElementById('viewer');
 var gravity = new THREE.Vector3( 0, 0, 0 );
 
 function main_init() {
-
+    renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    loadmeshes();
     scene.setGravity(gravity);
     
     scene.addEventListener(
@@ -60,11 +63,11 @@ function main_init() {
     projector = new THREE.Projector();
 
     
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    //renderer.setSize( window.innerWidth, window.innerHeight );
     // renderer
 
-    renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    
+    
 
     // Skybox
 
@@ -94,7 +97,7 @@ function main_init() {
 
     // create skybox mesh
     var skybox = new THREE.Mesh(
-      new THREE.BoxGeometry(1000, 1000, 1000),
+      new THREE.BoxGeometry(100000, 100000, 100000),
       skyBoxMaterial
     );
 
@@ -102,7 +105,7 @@ function main_init() {
     var material = new THREE.MeshLambertMaterial({
         envMap: cubemap
     });
-    mesh = new THREE.Mesh( new THREE.BoxGeometry( 100000, 100000, 100000 ), material );
+    mesh = new THREE.Mesh( new THREE.BoxGeometry( 10000000, 10000000, 10000000 ), material );
     scene.add( mesh );
 
     raycaster = new THREE.Raycaster();
@@ -162,33 +165,16 @@ function main_init() {
    
     
 
-    var loader = new THREE.STLLoader();
-    loader.addEventListener( 'load', function ( event ) {
-
-        var geometry = event.content;
-        var mesh = new THREE.Mesh( geometry, defaultmaterial );
-
-        mesh.position.set( 0, - 0.37, - 0.6 );
-        //mesh.rotation.set( - Math.PI / 2, 0, 0 );
-        mesh.scale.set( 0.1, 0.1, 0.1 );
-
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-
-        scene.add( mesh );
-
-    } );
-    //loader.load( 'http://localhost:8000/Documents/BME/szakdoga/program/models/1.stl' );
-
-
     
+
+    /*
     var square1 = new Square();
     objectgroup.push(square1);
     scene.add(square1);
     square1.initconstraints();
-    
+    */
 
-    camera.position.z =8;
+    camera.position.z =400;
     
     
     transformcontrol = new THREE.TransformControls( camera, renderer.domElement );
@@ -382,6 +368,20 @@ function executecommand(command){
             s.initconstraints();
             //select (s.edges[0]);
             //bindedges(selectededges[0],s.edges[0]);
+            
+            break;
+        case 'equilat':
+            var s = new Equilat();
+            objectgroup.push(s);
+            scene.add(s);
+            s.initconstraints();
+            
+            break;
+        case 'rightangle':
+            var s = new RightAngled();
+            objectgroup.push(s);
+            scene.add(s);
+            s.initconstraints();
             
             break;
         case 'connect':
