@@ -2,7 +2,7 @@
 
 
 var scene = new Physijs.Scene;//THREE.Scene();
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 100000 );
+var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 100000 );
 //var renderer = new THREE.WebGLRenderer();
 var renderer //= new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
 var objectgroup = [];
@@ -22,11 +22,19 @@ var selectededges = [];
 var selectedcorners = [];
 var canvas = document.getElementById('viewer');
 var gravity = new THREE.Vector3( 0, 0, 0 );
+var scale = 0.01;
+var boxsize = 20000;
 
 function main_init() {
     renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
     renderer.setSize( window.innerWidth, window.innerHeight );
     loadmeshes();
+
+    camera.position.set(1060.698, 792.767722,988.59642); 
+    projector = new THREE.Projector();
+    raycaster = new THREE.Raycaster();
+    raycaster.linePrecision = 0.3;
+
     scene.setGravity(gravity);
     
     scene.addEventListener(
@@ -45,10 +53,10 @@ function main_init() {
                         //obj.setLinearFactor(new THREE.Vector3(0.8,0.8,0.8));
                          
                         var linear = obj.getLinearVelocity();
-                        obj.setLinearVelocity(linear.multiplyScalar(0.98));
+                        obj.setLinearVelocity(linear.multiplyScalar(0.99));
 
                         var angular = obj.getAngularVelocity();
-                        obj.setAngularVelocity(angular.multiplyScalar(0.98));
+                        obj.setAngularVelocity(angular.multiplyScalar(0.99));
 
                         //obj.setLinearVelocity(obj.getLinearVelocity().multiplyScalar(0.95));
                     }
@@ -60,7 +68,6 @@ function main_init() {
     );
     
 
-    projector = new THREE.Projector();
 
     
     //renderer.setSize( window.innerWidth, window.innerHeight );
@@ -70,14 +77,14 @@ function main_init() {
     
 
     // Skybox
-
+    
     var urls = [
-      'textures/skybox/darkgloom_right.jpg',
-      'textures/skybox/darkgloom_left.jpg',
-      'textures/skybox/darkgloom_top.jpg',
-      'textures/skybox/darkgloom_top.jpg',
-      'textures/skybox/darkgloom_front.jpg',
-      'textures/skybox/darkgloom_back.jpg'
+      'textures/skybox/sky/right.jpg',
+      'textures/skybox/sky/left.jpg',
+      'textures/skybox/sky/top.jpg',
+      'textures/skybox/sky/bottom.jpg',
+      'textures/skybox/sky/front.jpg',
+      'textures/skybox/sky/back.jpg'
     ];
 
     var cubemap = THREE.ImageUtils.loadTextureCube(urls); // load textures
@@ -97,19 +104,23 @@ function main_init() {
 
     // create skybox mesh
     var skybox = new THREE.Mesh(
-      new THREE.BoxGeometry(100000, 100000, 100000),
+      new THREE.BoxGeometry(boxsize, boxsize, boxsize),
       skyBoxMaterial
     );
+    //skybox.position.set(0,49999,0);//add(0,5000,0);
 
     scene.add(skybox);
+    
+
+
+    /*
     var material = new THREE.MeshLambertMaterial({
         envMap: cubemap
     });
     mesh = new THREE.Mesh( new THREE.BoxGeometry( 10000000, 10000000, 10000000 ), material );
     scene.add( mesh );
 
-    raycaster = new THREE.Raycaster();
-    raycaster.linePrecision = 0.3;
+    
 
     // Materials
     var table_material = Physijs.createMaterial(
@@ -130,7 +141,7 @@ function main_init() {
     table.position.y = -10;
     table.receiveShadow = true;
     scene.add( table );
-
+    
     /*
     var PI2 = Math.PI * 2;
     var program = function ( context ) {
@@ -152,7 +163,8 @@ function main_init() {
     //scene.add( sphereInter );
     */
     //document.body.appendChild( renderer.domElement );
-    
+    var table = new Table();
+    scene.add(table);
     
     orbitcontrol = new THREE.OrbitControls( camera );
     orbitcontrol.addEventListener( 'change', update );
@@ -161,7 +173,7 @@ function main_init() {
     canvas.addEventListener( 'mousemove', onDocumentMouseMove, false );
     canvas.addEventListener( 'click', onDocumentMouseClick, false );
     
-    scene.add( new THREE.GridHelper( 500, 100 ) );
+    scene.add( new THREE.GridHelper( boxsize/2, edgelength ) );
    
     
 
@@ -174,8 +186,7 @@ function main_init() {
     square1.initconstraints();
     */
 
-    camera.position.z =400;
-    
+   
     
     transformcontrol = new THREE.TransformControls( camera, renderer.domElement );
 
@@ -229,6 +240,8 @@ function main_init() {
             scene.simulate(); // run physic
         };
         
+        
+
         var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
         projector.unprojectVector( vector, camera );
 
@@ -267,7 +280,15 @@ function main_init() {
             renderer.render( scene, camera );
     }
     function update() {
-
+        //check camera position
+        var lowerlimit = boxsize/2+100;
+        var upperlimit = boxsize/2-100;
+        if (camera.position.x>=upperlimit)camera.position.x = upperlimit;
+        if (camera.position.y>=upperlimit)camera.position.y = upperlimit;
+        if (camera.position.z>=upperlimit)camera.position.z = upperlimit;
+        if (camera.position.x<=-lowerlimit)camera.position.x = -lowerlimit;
+        if (camera.position.y<=-lowerlimit)camera.position.y = -lowerlimit;
+        if (camera.position.z<=-lowerlimit)camera.position.z = -lowerlimit;
     }
     animate();
     

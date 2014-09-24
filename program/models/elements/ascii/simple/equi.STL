@@ -1,0 +1,58 @@
+solid haromszog a egyszeru
+   facet normal -9.727512e-017 -1.000000e+000 0.000000e+000
+      outer loop
+         vertex 5.100000e+002 5.900839e-015 1.600000e+001
+         vertex 0.000000e+000 5.551115e-014 1.600000e+001
+         vertex 5.100000e+002 5.900839e-015 0.000000e+000
+      endloop
+   endfacet
+   facet normal -9.727512e-017 -1.000000e+000 0.000000e+000
+      outer loop
+         vertex 5.100000e+002 5.900839e-015 0.000000e+000
+         vertex 0.000000e+000 5.551115e-014 1.600000e+001
+         vertex 0.000000e+000 5.551115e-014 0.000000e+000
+      endloop
+   endfacet
+   facet normal 8.660254e-001 5.000000e-001 0.000000e+000
+      outer loop
+         vertex 2.550000e+002 4.416729e+002 1.600000e+001
+         vertex 5.100000e+002 5.551115e-014 1.600000e+001
+         vertex 2.550000e+002 4.416729e+002 0.000000e+000
+      endloop
+   endfacet
+   facet normal 8.660254e-001 5.000000e-001 0.000000e+000
+      outer loop
+         vertex 2.550000e+002 4.416729e+002 0.000000e+000
+         vertex 5.100000e+002 5.551115e-014 1.600000e+001
+         vertex 5.100000e+002 5.551115e-014 0.000000e+000
+      endloop
+   endfacet
+   facet normal -8.660254e-001 5.000000e-001 0.000000e+000
+      outer loop
+         vertex 0.000000e+000 5.551115e-014 1.600000e+001
+         vertex 2.550000e+002 4.416729e+002 1.600000e+001
+         vertex 0.000000e+000 5.551115e-014 0.000000e+000
+      endloop
+   endfacet
+   facet normal -8.660254e-001 5.000000e-001 0.000000e+000
+      outer loop
+         vertex 0.000000e+000 5.551115e-014 0.000000e+000
+         vertex 2.550000e+002 4.416729e+002 1.600000e+001
+         vertex 2.550000e+002 4.416729e+002 0.000000e+000
+      endloop
+   endfacet
+   facet normal 0.000000e+000 0.000000e+000 1.000000e+000
+      outer loop
+         vertex 5.100000e+002 5.900839e-015 1.600000e+001
+         vertex 2.550000e+002 4.416729e+002 1.600000e+001
+         vertex 0.000000e+000 5.551115e-014 1.600000e+001
+      endloop
+   endfacet
+   facet normal 0.000000e+000 0.000000e+000 -1.000000e+000
+      outer loop
+         vertex 0.000000e+000 5.551115e-014 0.000000e+000
+         vertex 2.550000e+002 4.416729e+002 0.000000e+000
+         vertex 5.100000e+002 5.900839e-015 0.000000e+000
+      endloop
+   endfacet
+endsolid
