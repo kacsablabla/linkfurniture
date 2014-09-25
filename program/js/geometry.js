@@ -37,35 +37,6 @@ function main_init() {
 
     scene.setGravity(gravity);
     
-    scene.addEventListener(
-        'update',
-        function() {
-            physicssimulationcounter--;
-            if (physicssimulationcounter <=0) {
-                //physicssimulation = false;
-            };
-            if (true || controllee != undefined)
-                for (var i = objectgroup.length - 1; i >= 0; i--) {
-                    var obj = objectgroup[i]
-                    if (obj instanceof Square){
-
-                        //obj.setAngularFactor(new THREE.Vector3(0.8,0.8,0.8));
-                        //obj.setLinearFactor(new THREE.Vector3(0.8,0.8,0.8));
-                         
-                        var linear = obj.getLinearVelocity();
-                        obj.setLinearVelocity(linear.multiplyScalar(0.99));
-
-                        var angular = obj.getAngularVelocity();
-                        obj.setAngularVelocity(angular.multiplyScalar(0.99));
-
-                        //obj.setLinearVelocity(obj.getLinearVelocity().multiplyScalar(0.95));
-                    }
-                    
-                };
-                
-            //physics_stats.update();
-        }
-    );
     
 
 
@@ -237,47 +208,11 @@ function main_init() {
         //orbitcontrol.update();
         // find intersections
         if (physicssimulation) {
+            physicsautooff();
             scene.simulate(); // run physic
         };
         
-        
-
-        var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
-        projector.unprojectVector( vector, camera );
-
-        raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
-
-        var intersects = raycaster.intersectObjects( objectgroup, true);
-        var closestintersection;
-        for (var i = 0; intersects.length > i; i++) {
-
-            if (intersects[i].object.visible){
-
-                closestintersection = intersects[i].object;
-                break;
-            }
-        };
-
-        if ( closestintersection  ) {
-
-            if ( currentIntersected !== undefined ) {
-
-                hoverout(currentIntersected);
-            }
-
-            currentIntersected = closestintersection;
-            hoverover(currentIntersected);
-            
-
-        } else {
-
-            if ( currentIntersected !== undefined ) {
-
-                hoverout(currentIntersected);
-            }
-            currentIntersected = undefined;
-        }
-            renderer.render( scene, camera );
+        renderer.render( scene, camera );
     }
     function update() {
         //check camera position
@@ -293,6 +228,43 @@ function main_init() {
     animate();
     
     
+};
+function selectmousetarget(){
+    var vector = new THREE.Vector3( mouse.x, mouse.y, 1 );
+    projector.unprojectVector( vector, camera );
+
+    raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+
+    var intersects = raycaster.intersectObjects( objectgroup, true);
+    var closestintersection;
+    for (var i = 0; intersects.length > i; i++) {
+
+        if (intersects[i].object.visible){
+
+            closestintersection = intersects[i].object;
+            break;
+        }
+    };
+
+    if ( closestintersection  ) {
+
+        if ( currentIntersected !== undefined ) {
+
+            hoverout(currentIntersected);
+        }
+
+        currentIntersected = closestintersection;
+        hoverover(currentIntersected);
+        
+
+    } else {
+
+        if ( currentIntersected !== undefined ) {
+
+            hoverout(currentIntersected);
+        }
+        currentIntersected = undefined;
+    }
 };
 
 function onDocumentMouseClick(){
@@ -339,7 +311,10 @@ function onDocumentMouseUp( event ) {
 function onDocumentMouseMove( event ) {
 
     event.preventDefault();
-    if (mousedown) {mousedragging = true};
+    if (mousedown) {
+        mousedragging = true;
+    }
+    else selectmousetarget();
     mousemoved = true;
 
     var rect = canvas.getBoundingClientRect();
@@ -381,6 +356,19 @@ function executecommand(command){
     command = command ?  command.split() : document.getElementById('command').value.split();
     console.log(command);
     switch(command[0]){
+        case 'test1':
+            for (var i = 25 - 1; i >= 0; i--) {
+                var s = new Square();
+                objectgroup.push(s);
+                scene.add(s);
+                s.initconstraints();
+            };
+            physicsswitch();
+            //select (s.edges[0]);
+            //bindedges(selectededges[0],s.edges[0]);
+            
+            break;
+
         case 'square':
             //if (selectededges.length == 0)return;
             var s = new Square();
@@ -440,6 +428,7 @@ function deselectcorners(){
 
 function connectcorners(a,b){
     deselectcorners();
+    physicson()
     var connectora = a.getconnector();
     var connectorb = b.getconnector();
     //return;
@@ -449,6 +438,8 @@ function connectcorners(a,b){
 }
 
 function disconnectcorners(corner,face){
+    deselectcorners();
+    physicson()
    var connector = corner.getconnector();
    var corner
    for (var i = connector.corners.length - 1; i >= 0; i--) {
@@ -458,22 +449,29 @@ function disconnectcorners(corner,face){
         }
    };
    if (connector.removecorner(corner)) corner.visible = true;
-   
+    
    
 }
 
 function connectedges(a,b){
-  var a1 = a.corners[0];
-  var a2 = a.corners[1];
-  var b1 = b.corners[0];
-  var b2 = b.corners[1];
+    deselectedges();
+    physicson()
+    var a1 = a.corners[0];
+    var a2 = a.corners[1];
+    var b1 = b.corners[0];
+    var b2 = b.corners[1];
 
-  connectcorners(a1,b1);
-  connectcorners(a2,b2);
+    var normaldist = a1.position.distanceToSquared(b1.position)+a2.position.distanceToSquared(b2.position);
+    var crossdist = a1.position.distanceToSquared(b2.position)+a2.position.distanceToSquared(b1.position);
+    if (crossdist<normaldist) {var temp = b1; b1 = b2; b2 = temp;};
+
+    connectcorners(a1,b1);
+    connectcorners(a2,b2);
 }
 
 function disconnectedges(a,b){
-
+    deselectedges();
+    physicson()
   var a1 = a.corners[0];
   var a2 = a.corners[1];
 
@@ -481,69 +479,7 @@ function disconnectedges(a,b){
   disconnectcorners(a2,b);
 }
 
-function bindedges(a,b){
 
-    if (b == undefined ) {
-        return;
-    };
-  
-
-    if (!(a.parent.mass == 0 || b.parent.mass == 0)) {
-        //a.parent.mass = 0;
-    };
-    
-
-    var axisa =  a.getaxis();
-    var posa = a.getposition();
-    var pointa1 = posa.clone().sub(axisa);
-    var pointa2 = posa.clone().add(axisa);
-    axisa.multiplyScalar(0.5);
-
-    var axisb =  b.getaxis();
-    var posb = b.getposition();
-    var pointb1 = posb.clone().sub(axisb);
-    var pointb2 = posb.clone().add(axisb);
-
-    var simpledistancesum = pointa1.distanceToSquared(pointb1)+pointa2.distanceToSquared(pointb2);
-    var crossdistancesum = pointa1.distanceToSquared(pointb2)+pointa2.distanceToSquared(pointb1);
-
-    if (crossdistancesum < simpledistancesum) {
-        var temp = pointb1;
-        pointb1 = pointb2;
-        pointb2 = temp;
-    };
-    var length = 10;
-    var hex = 0xffff00;
-
-
-    var arrowHelper = new THREE.ArrowHelper( axisa, posa, length, hex );
-    scene.add( arrowHelper );
-    arrowHelper.scale = 10;
-    
-    //constraint1
-    var constraint1 = new Physijs.PointConstraint(
-        a.parent, // First object to be constrained
-        b.parent, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
-        pointa1 // point in the scene to apply the constraint
-    );
-    constraint1.positionb  = b.parent.worldToLocal(pointb1);//b.parent.worldToLocal(b.position.clone())// window.Phisijs.convertWorldPositionToObject( b.position, b.parent ).clone();
-    constraint1.scene = scene;
-    scene.addConstraint( constraint1 ,true);
-
-    //constraint2
-    var constraint2 = new Physijs.PointConstraint(
-        a.parent, // First object to be constrained
-        b.parent, // OPTIONAL second object - if omitted then physijs_mesh_1 will be constrained to the scene
-        pointa2 // point in the scene to apply the constraint
-    );
-    constraint2.positionb  = b.parent.worldToLocal(pointb2);//b.parent.worldToLocal(b.position.clone())// window.Phisijs.convertWorldPositionToObject( b.position, b.parent ).clone();
-    constraint2.scene = scene;
-    scene.addConstraint( constraint2 ,true);
-
-
-    
-
-}
 function nail(mymesh){
     if (mymesh.mass !=0){
         mymesh.mass = 0;
@@ -565,17 +501,59 @@ function nail(mymesh){
 }
 
 function physicsswitch(){
-    if (physicssimulation == false) {
-        for (var i = objectgroup.length - 1; i >= 0; i--) {
+    if (! physicssimulation) physicson();
+    else{
+        physicsoff();
+    }
+}
+function physicsoff(){
+};
+
+function physicson(){
+    if (physicssimulation) return;
+    /*for (var i = objectgroup.length - 1; i >= 0; i--) {
             objectgroup[i].__dirtyPosition = true;
             objectgroup[i].__dirtyRotation = true;
-        };
-        physicssimulationcounter = 500;
-    };
-    physicssimulation = !physicssimulation;
-    if (physicssimulation) scene.onSimulationResume();
+    };*/
+    physicssimulationcounter = 150;
+    physicssimulation = true;
+    scene.onSimulationResume();
 }
 
+function physicsautooff(){
+
+    var shouldstopphysics = true;
+    physicssimulationcounter--;
+    if (physicssimulationcounter >=0) {
+        shouldstopphysics = false;
+    };
+    
+    for (var i = objectgroup.length - 1; i >= 0; i--) {
+        var obj = objectgroup[i]
+        if (obj instanceof Square){
+
+
+            //obj.setAngularFactor(new THREE.Vector3(0.8,0.8,0.8));
+            //obj.setLinearFactor(new THREE.Vector3(0.8,0.8,0.8));
+             
+            var linear = obj.getLinearVelocity();
+            obj.setLinearVelocity(linear.multiplyScalar(0.7));
+
+            var angular = obj.getAngularVelocity();
+            obj.setAngularVelocity(angular.multiplyScalar(0.7));
+
+            if (shouldstopphysics == true) {
+                //console.log('linear: '+linearlen+" angular:" + angularlen);
+                if (linear.length()>1 || angular.length()>1) shouldstopphysics = false;
+            };
+            //console.log('linear: '+linear.length()+" angular:" + angular.length())
+            //obj.setLinearVelocity(obj.getLinearVelocity().multiplyScalar(0.95));
+        }
+        
+    };
+
+    if (shouldstopphysics) physicssimulation = false;
+}
 function gravityswitch(){
     if (gravity.y == 0) {gravity.y = -7}
     else {gravity.y = 0;}

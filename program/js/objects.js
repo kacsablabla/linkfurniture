@@ -9,10 +9,11 @@ var color_selected = 0xff0000;
 var color_nailed = 0xbbbbbb;
 var color_default_connector = 0x888888;
 
+var mass = undefined;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture1.jpg");
 var cornerradius = 8;
 var offset = 15;
-var cornerradius_symbolic = 15;
+var cornerradius_symbolic = 19;
 var edgelength = 510;
 var squaregeom;
 var equigeom;
@@ -55,7 +56,7 @@ CornerConnector = function(){
     this.constraints = {};
     this.corners = [];
 
-    Physijs.SphereMesh.call(this,geometry,material);
+    Physijs.SphereMesh.call(this,geometry,material,mass);
 
     this.addcorner = function(corner,constraint){
         this.constraints[corner.id] = constraint;
@@ -129,7 +130,7 @@ Edge = function(c1,c2,parent) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
 
-    var geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, edgelength, 13, 1);
+    this.geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, edgelength, 13, 1);
     
     var material = new THREE.MeshBasicMaterial({
         color: color_default_connector, 
@@ -140,7 +141,7 @@ Edge = function(c1,c2,parent) {
     });
 
     this.corners = [c1,c2];
-    Physijs.CylinderMesh.call(this,geometry,material);
+    THREE.Mesh.call(this,this.geometry,material);
 
     this.selected = false;
     this.transformable = false;
@@ -197,7 +198,7 @@ Edge = function(c1,c2,parent) {
 };
 
 
-Edge.prototype = Object.create(Physijs.CylinderMesh.prototype);
+Edge.prototype = Object.create(THREE.Mesh.prototype);
 
 
 
@@ -264,10 +265,13 @@ Square = function() {
     });
 
         
-    var geometry = squaregeom; //new THREE.Geometry();
+    this.geometry = squaregeom; //new THREE.Geometry();
 
 
-    Physijs.ConvexMesh.call(this,geometry,material);
+    Physijs.ConvexMesh.call(this,this.geometry,material,mass);
+
+    //geometry.merge(this);
+
     this.position.set( 0, 0, 0 );
 
     this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
@@ -287,39 +291,46 @@ Square = function() {
     }
 
     this.initconstraints = function(){
-    var c1 = this.addcorner('1');
-    var c2 = this.addcorner('2');
-    var c3 = this.addcorner('3');
-    var c4 = this.addcorner('4');
+        return;
+        var c1 = this.addcorner('1');
+        var c2 = this.addcorner('2');
+        var c3 = this.addcorner('3');
+        var c4 = this.addcorner('4');
 
-    
-    var e1 = new Edge(c1,c2,this);
-    var e2 = new Edge(c2,c3,this);
-    var e3 = new Edge(c3,c4,this);
-    var e4 = new Edge(c4,c1,this);
+        
+        var e1 = new Edge(c1,c2,this);
+        var e2 = new Edge(c2,c3,this);
+        var e3 = new Edge(c3,c4,this);
+        var e4 = new Edge(c4,c1,this);
 
-    e1.rotation.z =Math.PI/2;   
-    e1.position.y +=edgelength/2+offset;
-    e2.position.x +=edgelength/2+offset;
-    e3.rotation.z =Math.PI/2;
-    e3.position.y -=edgelength/2+offset;
-    e4.position.x -=edgelength/2+offset;
-    
-    e1.position.add(this.center);
-    e2.position.add(this.center);
-    e3.position.add(this.center);
-    e4.position.add(this.center);
+        e1.rotation.z =Math.PI/2;   
+        e1.position.y +=edgelength/2+offset;
+        e2.position.x +=edgelength/2+offset;
+        e3.rotation.z =Math.PI/2;
+        e3.position.y -=edgelength/2+offset;
+        e4.position.x -=edgelength/2+offset;
+        
+        e1.position.add(this.center);
+        e2.position.add(this.center);
+        e3.position.add(this.center);
+        e4.position.add(this.center);
 
-    this.add(e1);
-    this.add(e2);
-    this.add(e3);
-    this.add(e4);
+        this.add(e1);
+        this.add(e2);
+        this.add(e3);
+        this.add(e4);
 
 
-    this.edges.push(e1);
-    this.edges.push(e2);
-    this.edges.push(e3);
-    this.edges.push(e4);
+        this.edges.push(e1);
+        this.edges.push(e2);
+        this.edges.push(e3);
+        this.edges.push(e4);
+        /*
+        this.geometry.merge(e1.geometry);
+        this.geometry.merge(e2.geometry);
+        this.geometry.merge(e3.geometry);
+        this.geometry.merge(e4.geometry);
+        */
 
     }
 
