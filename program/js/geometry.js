@@ -216,14 +216,13 @@ function main_init() {
     }
     function update() {
         //check camera position
-        var lowerlimit = boxsize/2+100;
-        var upperlimit = boxsize/2-100;
-        if (camera.position.x>=upperlimit)camera.position.x = upperlimit;
-        if (camera.position.y>=upperlimit)camera.position.y = upperlimit;
-        if (camera.position.z>=upperlimit)camera.position.z = upperlimit;
-        if (camera.position.x<=-lowerlimit)camera.position.x = -lowerlimit;
-        if (camera.position.y<=-lowerlimit)camera.position.y = -lowerlimit;
-        if (camera.position.z<=-lowerlimit)camera.position.z = -lowerlimit;
+        var limit = boxsize/2-100;
+        if (camera.position.x>=limit)camera.position.x = limit;
+        if (camera.position.y>=limit)camera.position.y = limit;
+        if (camera.position.z>=limit)camera.position.z = limit;
+        if (camera.position.x<=-limit)camera.position.x = -limit;
+        if (camera.position.y<=-limit)camera.position.y = -limit;
+        if (camera.position.z<=-limit)camera.position.z = -limit;
     }
     animate();
     
@@ -357,16 +356,13 @@ function executecommand(command){
     console.log(command);
     switch(command[0]){
         case 'test1':
-            for (var i = 25 - 1; i >= 0; i--) {
-                var s = new Square();
-                objectgroup.push(s);
-                scene.add(s);
-                s.initconstraints();
-            };
-            physicsswitch();
-            //select (s.edges[0]);
-            //bindedges(selectededges[0],s.edges[0]);
-            
+            test1();
+            break;
+        case 'test2':
+            test2();
+            break;
+        case 'clear':
+            clearscene();
             break;
 
         case 'square':
@@ -431,6 +427,7 @@ function connectcorners(a,b){
     physicson()
     var connectora = a.getconnector();
     var connectorb = b.getconnector();
+    if (connectora == connectorb) return;
     //return;
     //connectorb.position.copy(connectora.position);
     connectora.mergeWithConnector(connectorb);
@@ -507,6 +504,7 @@ function physicsswitch(){
     }
 }
 function physicsoff(){
+    physicssimulation = false;
 };
 
 function physicson(){
@@ -532,22 +530,16 @@ function physicsautooff(){
         var obj = objectgroup[i]
         if (obj instanceof Square){
 
-
-            //obj.setAngularFactor(new THREE.Vector3(0.8,0.8,0.8));
-            //obj.setLinearFactor(new THREE.Vector3(0.8,0.8,0.8));
              
             var linear = obj.getLinearVelocity();
-            obj.setLinearVelocity(linear.multiplyScalar(0.7));
+            obj.setLinearVelocity(linear.multiplyScalar(0.8));
 
             var angular = obj.getAngularVelocity();
-            obj.setAngularVelocity(angular.multiplyScalar(0.7));
+            obj.setAngularVelocity(angular.multiplyScalar(0.8));
 
             if (shouldstopphysics == true) {
-                //console.log('linear: '+linearlen+" angular:" + angularlen);
                 if (linear.length()>1 || angular.length()>1) shouldstopphysics = false;
             };
-            //console.log('linear: '+linear.length()+" angular:" + angular.length())
-            //obj.setLinearVelocity(obj.getLinearVelocity().multiplyScalar(0.95));
         }
         
     };
@@ -562,6 +554,25 @@ function gravityswitch(){
     
 }
 
+function clearscene(){
+    var constraints = scene._constraints;
+   for (var i in constraints) {
+        var constraint = constraints[i];
+        scene.removeConstraint(constraint);
+   };
+   for (var i = objectgroup.length - 1; i >= 0; i--) {
+       scene.remove (objectgroup[i]);
+
+        objectgroup[i].__dirtyPosition = true;
+        objectgroup[i].__dirtyRotation = true;
+   };
+
+    selectededges = [];
+    selectedcorners = [];
+    objectgroup = [];
+    physicsoff();
+
+}
 function changed(){
     alert('changed');
 }

@@ -237,7 +237,12 @@ Corner = function(parent) {
             var connector = new CornerConnector();
             scene.add(connector);
             objectgroup.push(connector);
-            connector.position.copy(this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position)));
+            var pos = this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position))
+            connector.position.set(pos.x,pos.y,pos.z);
+            connector.matrixAutoUpdate = false;
+            connector.updateMatrix();
+            connector.updateMatrixWorld();
+            connector.matrixAutoUpdate = true;
             this.visible = false;
             constraint = this.connecttoconnector(connector);
         };
@@ -279,7 +284,7 @@ Square = function() {
     this.selected = false;
     this.transformable = true; 
     
-    this.corners = {};
+    this.corners = [];
     this.edges = [];
     
     this.getdefaultcolor = function(){
@@ -291,7 +296,6 @@ Square = function() {
     }
 
     this.initconstraints = function(){
-        return;
         var c1 = this.addcorner('1');
         var c2 = this.addcorner('2');
         var c3 = this.addcorner('3');
@@ -355,7 +359,7 @@ Square = function() {
                 break;
         }
         c.position.set(centerpos.x,centerpos.y,centerpos.z);// = center;
-        this.corners[c.id] = name;
+        this.corners.push(c);
         this.add(c);
         return c;
     }
