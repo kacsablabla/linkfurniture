@@ -14,7 +14,7 @@ var currentIntersected,raycaster;
 var mouse = new THREE.Vector2();
 var orbitcontrol;
 var transformcontrol;
-var controllee;
+//var controllee;
 var mousedown = false;
 var mousemoved = false;
 var mousedragging = false;
@@ -24,6 +24,27 @@ var canvas = document.getElementById('viewer');
 var gravity = new THREE.Vector3( 0, 0, 0 );
 var scale = 0.01;
 var boxsize = 20000;
+
+var transformhelper = new TransformHelper();
+scene.add(transformhelper);
+//var rotationhelper = new THREE.Object3D();
+//scene.add(rotationhelper);
+initrotationhelper();
+
+function initrotationhelper(){
+    var geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
+    
+    var material = new THREE.MeshBasicMaterial({
+        color: 0x888888, 
+        //map:texture,
+        //transparent: true, 
+        //opacity: 0.8,
+        side:THREE.FrontSide
+    });
+
+    var mesh = new THREE.Mesh(geometry,material);
+    transformhelper.add(mesh);
+}
 
 function main_init() {
     renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
@@ -176,7 +197,7 @@ function main_init() {
             transformcontrol.setMode( "rotate" );
             break;
           case 70: // E
-            transformcontrol.detach( controllee );
+            transformhelper.detach( );
             orbitcontrol.enabled = true;
             break;
           case 82: // R
@@ -271,13 +292,17 @@ function onDocumentMouseClick(){
         if (currentIntersected == undefined) {
             deselectcorners();
             deselectedges();
-            transformcontrol.detach(controllee)
-            controllee = null;
+            transformhelper.detach();
+            //detachToRotationHelper();
+            //controllee = null;
             orbitcontrol.enabled = true;
         }
         else if (currentIntersected.transformable) {
-            controllee = currentIntersected;
-            transformcontrol.attach( controllee); 
+            //attachToRotationHelper(currentIntersected);
+            //controllee = currentIntersected;
+            physicssimulation = false;
+            transformhelper.attach( currentIntersected);
+            //transformcontrol.attach(transformhelper); 
             orbitcontrol.enabled = false; 
         }
         else{
@@ -353,13 +378,13 @@ function addShadowedLight( x, y, z, color, intensity ) {
 function executecommand(command){
 
     command = command ?  command.split() : document.getElementById('command').value.split();
-    console.log(command);
+    //console.log(command);
     switch(command[0]){
         case 'test1':
             test1();
             break;
         case 'test2':
-            test2();
+            test3();
             break;
         case 'clear':
             clearscene();
@@ -371,6 +396,12 @@ function executecommand(command){
             objectgroup.push(s);
             scene.add(s);
             s.initconstraints();
+
+            log('add','square',s);
+            if (selectededges.length > 0) {
+                addtoedge(s,selectededges[0]);
+            };
+            
             //select (s.edges[0]);
             //bindedges(selectededges[0],s.edges[0]);
             
@@ -380,6 +411,11 @@ function executecommand(command){
             objectgroup.push(s);
             scene.add(s);
             s.initconstraints();
+
+            log('add','equilat',s);
+            if (selectededges.length > 0) {
+                addtoedge(s,selectededges[0]);
+            };
             
             break;
         case 'rightangle':
@@ -387,23 +423,35 @@ function executecommand(command){
             objectgroup.push(s);
             scene.add(s);
             s.initconstraints();
+
+            log('add','rightangle',s);
+            if (selectededges.length > 0) {
+                addtoedge(s,selectededges[0]);
+            };
             
             break;
         case 'connect':
-            if (selectededges.length == 2)
-                connectedges(selectededges[0],selectededges[1]);
-            else if (selectedcorners.length == 2) 
-                connectcorners(selectedcorners[0],selectedcorners[1]);
+            if (selectededges.length == 2){
+                log('connectedges',selectededges[0],selectededges[1]);
+                connectedges(selectededges[0],selectededges[1]);}
+            else if (selectedcorners.length == 2) {
+                log('connectcorners',selectedcorners[0],selectedcorners[1]);
+                connectcorners(selectedcorners[0],selectedcorners[1]);}
             //bindedges(selectededges[0],selectededges[1]);
             break;
         case 'nail':
             nail(selectededges[0]);
+            log('nail',selectededges[0].parent);
             break;
         case 'disconnect':
-            if (selectedcorners.length == 1 && controllee != undefined)
-                disconnectcorners(selectedcorners[0],controllee);
-            else if (selectededges.length == 1 && controllee != undefined)
-                disconnectedges(selectededges[0],controllee);
+            if (selectedcorners.length == 1 && transformhelper.controllee != undefined){
+                log('disconnectcorner',selectedcorners[0],transformhelper.controllee);
+                disconnectcorners(selectedcorners[0],transformhelper.controllee);
+            }
+            else if (selectededges.length == 1 && transformhelper.controllee != undefined){
+                log('disconnectedge',selectededges[0],transformhelper.controllee);
+                disconnectedges(selectededges[0],transformhelper.controllee);
+            }
             break;
     }
 }
@@ -423,6 +471,7 @@ function deselectcorners(){
 }
 
 function connectcorners(a,b){
+    transformhelper.detach();
     deselectcorners();
     physicson()
     var connectora = a.getconnector();
@@ -435,6 +484,7 @@ function connectcorners(a,b){
 }
 
 function disconnectcorners(corner,face){
+    transformhelper.detach();
     deselectcorners();
     physicson()
    var connector = corner.getconnector();
@@ -451,6 +501,7 @@ function disconnectcorners(corner,face){
 }
 
 function connectedges(a,b){
+    transformhelper.detach();
     deselectedges();
     physicson()
     var a1 = a.corners[0];
@@ -465,8 +516,8 @@ function connectedges(a,b){
     connectcorners(a1,b1);
     connectcorners(a2,b2);
 }
-
 function disconnectedges(a,b){
+    transformhelper.detach();
     deselectedges();
     physicson()
   var a1 = a.corners[0];
@@ -475,6 +526,23 @@ function disconnectedges(a,b){
   disconnectcorners(a1,b);
   disconnectcorners(a2,b);
 }
+
+function addtoedge(element,edge){
+
+    transformhelper.detach();
+    var pos = edge.position.clone();
+    edge.parent.localToWorld(pos);
+    element.position.set(pos.x,pos.y,pos.z);
+    element.matrixAutoUpdate = false;
+    element.updateMatrix();
+    element.updateMatrixWorld();
+    element.matrixAutoUpdate = true;
+    element.__dirtyPosition = true;
+    element.__dirtyRotation = true;
+    connectedges(element.edges[0],edge);
+}
+
+
 
 
 function nail(mymesh){
@@ -509,6 +577,7 @@ function physicsoff(){
 
 function physicson(){
     if (physicssimulation) return;
+    transformhelper.detach();
     /*for (var i = objectgroup.length - 1; i >= 0; i--) {
             objectgroup[i].__dirtyPosition = true;
             objectgroup[i].__dirtyRotation = true;
@@ -532,10 +601,10 @@ function physicsautooff(){
 
              
             var linear = obj.getLinearVelocity();
-            obj.setLinearVelocity(linear.multiplyScalar(0.8));
+            obj.setLinearVelocity(linear.multiplyScalar(0.87));
 
             var angular = obj.getAngularVelocity();
-            obj.setAngularVelocity(angular.multiplyScalar(0.8));
+            obj.setAngularVelocity(angular.multiplyScalar(0.87));
 
             if (shouldstopphysics == true) {
                 if (linear.length()>1 || angular.length()>1) shouldstopphysics = false;
@@ -576,5 +645,22 @@ function clearscene(){
 function changed(){
     alert('changed');
 }
+attachToRotationHelper = function(element){
+    return;
+    var rotcenter = element.getselectededge();
+    if (rotcenter == undefined) return;
+    var rotmatrix = new THREE.Matrix4();
+    var d = new THREE.Matrix4;
+    d.getInverse(rotationhelper.matrixWorld);
+    rotationhelper.applyMatrix(d);
+    rotationhelper.applyMatrix(rotcenter.matrixWorld.clone());
+    updatematrices(this.rotationhelper);
+    THREE.SceneUtils.attach( element, scene, rotationhelper );
+};
+detachToRotationHelper = function(){
+    return;
+    if (controllee.children.length > 2) return;
+    THREE.SceneUtils.detach( controllee.children[0], rotationhelper,scene);
+};
 
 

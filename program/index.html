@@ -25,14 +25,19 @@
 			<button id="disconnect" onclick="executecommand('disconnect')">disconnect</button>
 			<button id="nail" onclick="nail(controllee)">nail</button>
 			<button id="gravity" onclick="gravityswitch()">gravity</button>
+			<button id="poplog" onclick="poplog()">undo</button>
+			<button id="save" onclick="savelog()">save</button>
+			<button id="load" onclick="loadlog()">load</button>
 		</div>
 		<canvas id="viewer" tabindex='1'>
+
+			<script type="text/javascript" src="js/log.js"></script>
 			<script type="text/javascript" src="js/three.min.js"></script>
 			<script type="text/javascript" src="js/physi.js"></script>
 	        <script type="text/javascript" src="js/STLLoader.js"></script>
+	        <script type="text/javascript" src="js/objects.js"></script>
 	        <script type="text/javascript" src="js/geometry.js"></script>
 	        <script type="text/javascript" src="js/tests.js"></script>
-	        <script type="text/javascript" src="js/objects.js"></script>
 	        <script type="text/javascript" src="js/OrbitControls.js"></script>
 	        <script type="text/javascript" src="js/TransformControls.js"></script>
 	        	

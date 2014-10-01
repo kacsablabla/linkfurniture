@@ -557,14 +557,14 @@
 
 		this.object = undefined;
 		this.snap = null;
-		this.space = "world";
+		this.space = "local";
 		this.size = 1;
 		this.axis = null;
 
 		var scope = this;
 		
 		var _dragging = false;
-		var _mode = "translate";
+		var _mode = "rotate";
 		var _plane = "XY";
 
 		var changeEvent = { type: "change" };
@@ -686,6 +686,8 @@
 
 		};
 
+		
+
 		this.update = function () {
 
 			if ( scope.object === undefined ) return;
@@ -748,7 +750,6 @@
 			if ( scope.object === undefined || _dragging === true ) return;
 
 			event.preventDefault();
-			//event.stopPropagation();
 
 			var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
 
@@ -907,12 +908,15 @@
 
 				} else if ( scope.space == "local" ) {
 
+
 					point.applyMatrix4( tempMatrix.getInverse( worldRotationMatrix ) );
 
 					tempVector.applyMatrix4( tempMatrix.getInverse( worldRotationMatrix ) );
 
 					rotation.set( Math.atan2( point.z, point.y ), Math.atan2( point.x, point.z ), Math.atan2( point.y, point.x ) );
 					offsetRotation.set( Math.atan2( tempVector.z, tempVector.y ), Math.atan2( tempVector.x, tempVector.z ), Math.atan2( tempVector.y, tempVector.x ) );
+
+				
 
 					quaternionXYZ.setFromRotationMatrix( oldRotationMatrix );
 					quaternionX.setFromAxisAngle( unitX, rotation.x - offsetRotation.x );
@@ -922,10 +926,9 @@
 					if ( scope.axis == "X" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionX );
 					if ( scope.axis == "Y" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionY );
 					if ( scope.axis == "Z" ) quaternionXYZ.multiplyQuaternions( quaternionXYZ, quaternionZ );
+					
 
 					scope.object.quaternion.copy( quaternionXYZ );
-
-					
 
 				} else if ( scope.space == "world" ) {
 
@@ -957,7 +960,6 @@
 		}
 
 		function onPointerUp( event ) {
-
 			_dragging = false;
 			
 			onPointerHover( event );

@@ -37,7 +37,40 @@ function loadmeshes(){
 } 
 
 
+TransformHelper = function(){
 
+    this.controllee = undefined;
+    THREE.Object3D.call(this);
+
+    this.attach = function(target,refelement){
+
+        if (this.controllee != undefined) return;
+        if(refelement == undefined) refelement = target.getselectededge();
+        this.controllee = target;
+        this.setrefelement(refelement);
+        THREE.SceneUtils.attach( target, scene, this );
+        transformcontrol.attach(this);
+    }
+    this.setrefelement = function(refelement){
+        
+        var rotmatrix = new THREE.Matrix4();
+        var inverse = new THREE.Matrix4();
+        inverse.getInverse(this.matrixWorld);
+        this.applyMatrix(inverse);
+        this.applyMatrix(refelement.matrixWorld.clone());
+        updatematrices(this);
+    };
+    this.detach = function(){
+
+        if (this.controllee == undefined) return;
+        transformcontrol.detach(this);
+        THREE.SceneUtils.detach( this.controllee, this,scene);
+        this.controllee = undefined;
+    }
+}
+
+
+TransformHelper.prototype = Object.create(THREE.Object3D.prototype);
 
 CornerConnector = function(){
     
@@ -86,6 +119,11 @@ CornerConnector = function(){
         }
         otherconnector.constraints = {};
         otherconnector.corners = [];
+        // 
+        objectgroup.splice(objectgroup.indexOf(otherconnector),1);
+        scene.remove(otherconnector);
+
+
     }
     this.clearconnector = function(){
         for (var i = this.corners.length - 1; i >= 0; i--) {
@@ -126,11 +164,13 @@ EdgeConnector = function(){
 EdgeConnector.prototype = Object.create(Physijs.CylinderMesh.prototype);
 //Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
 
-Edge = function(c1,c2,parent) {
+Edge = function(c1,c2,parent,length) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
+    var reallength
+    length == undefined ?  reallength = edgelength : reallength = length;
 
-    this.geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, edgelength, 13, 1);
+    this.geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, reallength, 13, 1);
     
     var material = new THREE.MeshBasicMaterial({
         color: color_default_connector, 
@@ -145,6 +185,11 @@ Edge = function(c1,c2,parent) {
 
     this.selected = false;
     this.transformable = false;
+
+    var pos = c1.position.clone();
+    pos.add(c2.position);
+    pos.divideScalar(2);
+    this.position.copy(pos);
 
     this.othercorner = function(corner){
         if (this.corners[0] == corner)return this.corners[1];
@@ -169,13 +214,20 @@ Edge = function(c1,c2,parent) {
     };
 
     this.getaxis = function(){
+        var axis = this.corners[0].position.clone();
+        axis.sub(this.corners[1].position);
+        axis = this.localToWorld(axis);
+        console.log('axis: '+axis.x + ',' + axis.y + ',' + axis.z);
+        return axis;
+        /*
         var origin = new THREE.Vector3(0,0,0);
         var axis = new THREE.Vector3(0,edgelength/2+offset,0);
         origin = this.localToWorld( origin );
         axis = this.localToWorld( axis );
         axis = axis.sub(origin);
-        console.log('axis: '+axis.x + ',' + axis.y + ',' + axis.z);
+        
         return axis;
+        */
     };
 
     this.geteuler = function(){
@@ -308,16 +360,7 @@ Square = function() {
         var e4 = new Edge(c4,c1,this);
 
         e1.rotation.z =Math.PI/2;   
-        e1.position.y +=edgelength/2+offset;
-        e2.position.x +=edgelength/2+offset;
         e3.rotation.z =Math.PI/2;
-        e3.position.y -=edgelength/2+offset;
-        e4.position.x -=edgelength/2+offset;
-        
-        e1.position.add(this.center);
-        e2.position.add(this.center);
-        e3.position.add(this.center);
-        e4.position.add(this.center);
 
         this.add(e1);
         this.add(e2);
@@ -335,7 +378,6 @@ Square = function() {
         this.geometry.merge(e3.geometry);
         this.geometry.merge(e4.geometry);
         */
-
     }
 
     this.addcorner = function(name){
@@ -363,6 +405,15 @@ Square = function() {
         this.add(c);
         return c;
     }
+    this.getselectededge = function(){
+        for (var i = selectededges.length - 1; i >= 0; i--) {
+            var edge = getindexforedge(this,selectededges[i]);
+            if (edge != undefined){
+                return selectededges[i];
+            }
+        };
+        return this.edges[0];
+    }
 
 
 };
@@ -370,18 +421,28 @@ Square.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
 RightAngled = function() {
     
-    var geometry = rectgeom;
     var material = new THREE.MeshBasicMaterial({
                 color:color_default,
                 map:texture,
                 side:THREE.FrontSide
     });
-    Physijs.ConvexMesh.call(this,geometry,material);
-    this.position.set(0,0,0);
+
+        
+    this.geometry = rectgeom; //new THREE.Geometry();
+
+
+    Physijs.ConvexMesh.call(this,this.geometry,material,mass);
+
+    //geometry.merge(this);
+
+    this.position.set( 0, 0, 0 );
+
+    this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
+
     this.selected = false;
     this.transformable = true; 
     
-    this.corners = {};
+    this.corners = [];
     this.edges = [];
     
     this.getdefaultcolor = function(){
@@ -389,133 +450,94 @@ RightAngled = function() {
         else return color_default;
     }
     this.log = function() {
-        console.log('square');
+        console.log('right');
     }
 
     this.initconstraints = function(){
-    var c1 = this.addcorner('1');
-    var c2 = this.addcorner('2');
-    var c3 = this.addcorner('3');
-    var c4 = this.addcorner('4');
+        var c1 = this.addcorner('1');
+        var c2 = this.addcorner('2');
+        var c3 = this.addcorner('3');
 
-    
-    //constraints
-    /*
-    constraint = new Physijs.PointConstraint(c1, this, c1.position );
-    scene.addConstraint( constraint );
-    constraint = new Physijs.PointConstraint(c2, this, c2.position );
-    scene.addConstraint( constraint );
-    constraint = new Physijs.PointConstraint(c3, this, c3.position );
-    scene.addConstraint( constraint );
-    constraint = new Physijs.PointConstraint(c4, this, c4.position );
-    scene.addConstraint( constraint );
-    */
-    
-    var e1 = new Edge(c1,c2,this);
-    var e2 = new Edge(c2,c3,this);
-    var e3 = new Edge(c3,c4,this);
-    var e4 = new Edge(c4,c1,this);
+        
+        var e1 = new Edge(c1,c2,this,Math.sqrt(2)*edgelength);
+        var e2 = new Edge(c2,c3,this);
+        var e3 = new Edge(c3,c1,this);
 
-    e1.rotation.z =Math.PI/2;   
-    e1.position.y +=edgelength/2+cornerradius;
-    e2.position.x +=edgelength/2+cornerradius;
-    e3.rotation.z =Math.PI/2;
-    e3.position.y -=edgelength/2+cornerradius;
-    e4.position.x -=edgelength/2+cornerradius;
-    
+        e1.rotation.z =Math.PI/4;   
+        e2.rotation.z =Math.PI/2;
+        
 
-    this.add(e1);
-    this.add(e2);
-    this.add(e3);
-    this.add(e4);
-
-/*
-    this.edges[e1.id] = e1;
-    this.edges[e2.id] = e2;
-    this.edges[e3.id] = e3;
-    this.edges[e4.id] = e4;
-    */
-    this.edges.push(e1);
-    this.edges.push(e2);
-    this.edges.push(e3);
-    this.edges.push(e4);
-
-    
+        this.add(e1);
+        this.add(e2);
+        this.add(e3);
+        //this.add(e4);
 
 
+        this.edges.push(e1);
+        this.edges.push(e2);
+        this.edges.push(e3);
 
-    /*
-    e1.addToCorners(c1,c2,this);
-    e2.addToCorners(c2,c3,this);
-    e3.addToCorners(c3,c4,this);
-    e4.addToCorners(c4,c1,this);
-
-    c1.material.color.set (0x000000);
-    c2.material.color.set (0x333333);
-    c3.material.color.set (0x666666);
-    c4.material.color.set (0xaaaaaa);
-
-
-    e1.material.color.set (0x000000);
-    e2.material.color.set (0x333333);
-    e3.material.color.set (0x666666);
-    e4.material.color.set (0xaaaaaa);
-    */
     }
 
     this.addcorner = function(name){
-        v1 = new THREE.Vector3(-(edgelength/2+cornerradius),edgelength/2+cornerradius,0),
-        v2 = new THREE.Vector3(edgelength/2+cornerradius,edgelength/2+cornerradius,0);
+        var centerpos = new THREE.Vector3(0,0,0);
+        centerpos.copy(this.center);
+        v1 = new THREE.Vector3(-edgelength/2-offset,edgelength/2+offset,0),
+        v2 = new THREE.Vector3(edgelength/2+offset,edgelength/2+offset,0);
         c = new Corner(this)
         switch(name){
             case '1':
-                c.position.add(v1);
+                centerpos.add(v1)
                 break;
             case '2':
-                c.position.add(v2);
+                centerpos.sub(v1);
                 break;
             case '3':
-                c.position.sub(v1);
-                break;
-            case '4':
-                c.position.sub(v2);
+                centerpos.sub(v2);
                 break;
         }
-        this.corners[c.id] = name;
+        c.position.set(centerpos.x,centerpos.y,centerpos.z);// = center;
+        this.corners.push(c);
         this.add(c);
         return c;
     }
-
+    this.getselectededge = function(){
+        for (var i = selectededges.length - 1; i >= 0; i--) {
+            var edge = getindexforedge(this,selectededges[i]);
+            if (edge != undefined){
+                return selectededges[i];
+            }
+        };
+        return this.edges[0];
+    }
 
 };
 RightAngled.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
 Equilat = function() {
 
-    /*
-    var v1 = new THREE.Vector3(0,0,0),
-        v2 = new THREE.Vector3(edgelength,0,0),
-        v3 = new THREE.Vector3(0,edgelength,0),
-        v4 = new THREE.Vector3(0,cornerradius,0);
-
-
-    var geometry =  new THREE.Geometry();
-    geometry.vertices.push(
-        v1,v2,v3,v4
-        );
-    geometry.faces.push(new THREE.Face3(0,1,2));
-    */
-    var geometry = equigeom;
     var material = new THREE.MeshBasicMaterial({
                 color:color_default,
                 map:texture,
                 side:THREE.FrontSide
     });
-    Physijs.ConvexMesh.call(this,geometry,material);
+
+        
+    this.geometry = equigeom; //new THREE.Geometry();
+
+
+    Physijs.ConvexMesh.call(this,this.geometry,material,mass);
+
+    //geometry.merge(this);
+
+    this.position.set( 0, 0, 0 );
+
+    this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
+
     this.selected = false;
     this.transformable = true; 
     
-    this.corners = {};
+    this.corners = [];
     this.edges = [];
     
     this.getdefaultcolor = function(){
@@ -523,109 +545,77 @@ Equilat = function() {
         else return color_default;
     }
     this.log = function() {
-        console.log('square');
+        console.log('equi');
     }
 
     this.initconstraints = function(){
+        var c1 = this.addcorner('1');
+        var c2 = this.addcorner('2');
+        var c3 = this.addcorner('3');
 
-    this.scale.set( scale, scale, scale );
-    var c1 = this.addcorner('1');
-    var c2 = this.addcorner('2');
-    var c3 = this.addcorner('3');
-    var c4 = this.addcorner('4');
+        
+        var e1 = new Edge(c1,c2,this);
+        var e2 = new Edge(c2,c3,this);
+        var e3 = new Edge(c3,c1,this);
 
-    
-    //constraints
-    /*
-    constraint = new Physijs.PointConstraint(c1, this, c1.position );
-    scene.addConstraint( constraint );
-    constraint = new Physijs.PointConstraint(c2, this, c2.position );
-    scene.addConstraint( constraint );
-    constraint = new Physijs.PointConstraint(c3, this, c3.position );
-    scene.addConstraint( constraint );
-    constraint = new Physijs.PointConstraint(c4, this, c4.position );
-    scene.addConstraint( constraint );
-    */
-    
-    var e1 = new Edge(c1,c2,this);
-    var e2 = new Edge(c2,c3,this);
-    var e3 = new Edge(c3,c4,this);
-    var e4 = new Edge(c4,c1,this);
-
-    e1.rotation.z =Math.PI/2;   
-    e1.position.y +=edgelength/2+offset;
-    e2.position.x +=edgelength/2+offset;
-    e3.rotation.z =Math.PI/2;
-    e3.position.y -=edgelength/2+offset;
-    e4.position.x -=edgelength/2+offset;
-    
-
-    this.add(e1);
-    this.add(e2);
-    this.add(e3);
-    this.add(e4);
-
-/*
-    this.edges[e1.id] = e1;
-    this.edges[e2.id] = e2;
-    this.edges[e3.id] = e3;
-    this.edges[e4.id] = e4;
-    */
-    this.edges.push(e1);
-    this.edges.push(e2);
-    this.edges.push(e3);
-    this.edges.push(e4);
-
-    
+        e1.rotation.z -=Math.PI/6;   
+        e2.rotation.z =Math.PI/6;
+        e3.rotation.z = Math.PI/2;
+        
+        this.add(e1);
+        this.add(e2);
+        this.add(e3);
 
 
+        this.edges.push(e1);
+        this.edges.push(e2);
+        this.edges.push(e3);
+        /*
+        this.geometry.merge(e1.geometry);
+        this.geometry.merge(e2.geometry);
+        this.geometry.merge(e3.geometry);
+        this.geometry.merge(e4.geometry);
+        */
 
-    /*
-    e1.addToCorners(c1,c2,this);
-    e2.addToCorners(c2,c3,this);
-    e3.addToCorners(c3,c4,this);
-    e4.addToCorners(c4,c1,this);
-
-    c1.material.color.set (0x000000);
-    c2.material.color.set (0x333333);
-    c3.material.color.set (0x666666);
-    c4.material.color.set (0xaaaaaa);
-
-
-    e1.material.color.set (0x000000);
-    e2.material.color.set (0x333333);
-    e3.material.color.set (0x666666);
-    e4.material.color.set (0xaaaaaa);
-    */
     }
 
     this.addcorner = function(name){
-        v1 = new THREE.Vector3(-(edgelength/2+offset),edgelength/2+offset,0),
+        var centerpos = new THREE.Vector3(0,0,0);
+        centerpos.copy(this.center);
+        v1 = new THREE.Vector3(-edgelength/2-offset,edgelength/2+offset,0),
         v2 = new THREE.Vector3(edgelength/2+offset,edgelength/2+offset,0);
         c = new Corner(this)
         switch(name){
             case '1':
-                c.position.add(v1);
+                centerpos.sub(v2);
                 break;
             case '2':
-                c.position.add(v2);
+                centerpos.add(new THREE.Vector3(0,(Math.sqrt(3)/2-0.5)*edgelength+Math.sqrt(2*(offset*offset)),0));
                 break;
             case '3':
-                c.position.sub(v1);
-                break;
-            case '4':
-                c.position.sub(v2);
+                centerpos.sub(v1);
                 break;
         }
-        this.corners[c.id] = name;
+        c.position.set(centerpos.x,centerpos.y,centerpos.z);// = center;
+        this.corners.push(c);
         this.add(c);
         return c;
     }
+    this.getselectededge = function(){
+        for (var i = selectededges.length - 1; i >= 0; i--) {
+            var edge = getindexforedge(this,selectededges[i]);
+            if (edge != undefined){
+                return selectededges[i];
+            }
+        };
+        return this.edges[0];
+    }
+};
 
 
 Equilat.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
-};
+
 
 Table = function(){
 
@@ -723,4 +713,32 @@ assignUVs = function( geometry ){
 
     geometry.uvsNeedUpdate = true;
 
+}
+function updatematrices(element){
+    element.matrixAutoUpdate = false;
+    element.updateMatrix();
+    element.updateMatrixWorld();
+    element.matrixAutoUpdate = true;
+
+    element.__dirtyPosition = true;
+    element.__dirtyRotation = true;
+}
+
+function rotateAroundWorldAxis(object, axis, radians) {
+    var rotWorldMatrix = new THREE.Matrix4();
+    rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
+
+    // old code for Three.JS pre r54:
+    //  rotWorldMatrix.multiply(object.matrix);
+    // new code for Three.JS r55+:
+    rotWorldMatrix.multiply(object.matrix);                // pre-multiply
+
+    object.matrix = rotWorldMatrix;
+
+    // old code for Three.js pre r49:
+    // object.rotation.getRotationFromMatrix(object.matrix, object.scale);
+    // old code for Three.js pre r59:
+    // object.rotation.setEulerFromRotationMatrix(object.matrix);
+    // code for r59+:
+    object.rotation.setFromRotationMatrix(object.matrix);
 }
