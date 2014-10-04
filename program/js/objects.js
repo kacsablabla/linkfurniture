@@ -39,38 +39,79 @@ function loadmeshes(){
 
 TransformHelper = function(){
 
-    this.controllee = undefined;
-    THREE.Object3D.call(this);
-
+    this.target = undefined;
+    this.refelement;
+    this.geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
+    
+    this.material = new THREE.MeshBasicMaterial({
+        color: 0x888888, 
+        side:THREE.FrontSide
+    });
+    THREE.Mesh.call(this,this.geometry,this.material);
+    this.visible = false;
     this.attach = function(target,refelement){
 
-        if (this.controllee != undefined) return;
+        if (this.target != undefined) return;
         if(refelement == undefined) refelement = target.getselectededge();
-        this.controllee = target;
+        this.refelement = refelement;
+        this.target = target;
         this.setrefelement(refelement);
-        THREE.SceneUtils.attach( target, scene, this );
+        //THREE.SceneUtils.attach( target, scene, this );
         transformcontrol.attach(this);
     }
     this.setrefelement = function(refelement){
         
-        var rotmatrix = new THREE.Matrix4();
         var inverse = new THREE.Matrix4();
         inverse.getInverse(this.matrixWorld);
         this.applyMatrix(inverse);
         this.applyMatrix(refelement.matrixWorld.clone());
         updatematrices(this);
     };
+
+    this.updatetarget = function(){
+
+        var targetinverse = new THREE.Matrix4();
+        var refinverse = new THREE.Matrix4();
+        targetinverse.getInverse(this.target.matrixWorld);
+        refinverse.getInverse(this.refelement.matrix);
+        this.target.applyMatrix(targetinverse);
+        this.target.applyMatrix(refinverse);
+        this.target.applyMatrix(this.matrixWorld.clone());
+        updatematrices(this.target);
+    }
+
     this.detach = function(){
 
-        if (this.controllee == undefined) return;
+        if (this.target == undefined) return;
+        this.refelement = undefined;
         transformcontrol.detach(this);
-        THREE.SceneUtils.detach( this.controllee, this,scene);
-        this.controllee = undefined;
+        this.target = undefined;
+    }
+    this.update = function(){
+        if (this.target == undefined)return;
+        this.updatetarget();
     }
 }
+//initrotationhelper();
+/*
+function initrotationhelper(){
+    var geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
+    
+    var material = new THREE.MeshBasicMaterial({
+        color: 0x888888, 
+        //map:texture,
+        //transparent: true, 
+        //opacity: 0.8,
+        side:THREE.FrontSide
+    });
+
+    var mesh = new THREE.Mesh(geometry,material);
+    transformhelper.add(mesh);
+}
+*/
 
 
-TransformHelper.prototype = Object.create(THREE.Object3D.prototype);
+TransformHelper.prototype = Object.create(THREE.Mesh.prototype);
 
 CornerConnector = function(){
     

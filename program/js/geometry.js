@@ -29,22 +29,7 @@ var transformhelper = new TransformHelper();
 scene.add(transformhelper);
 //var rotationhelper = new THREE.Object3D();
 //scene.add(rotationhelper);
-initrotationhelper();
 
-function initrotationhelper(){
-    var geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: 0x888888, 
-        //map:texture,
-        //transparent: true, 
-        //opacity: 0.8,
-        side:THREE.FrontSide
-    });
-
-    var mesh = new THREE.Mesh(geometry,material);
-    transformhelper.add(mesh);
-}
 
 function main_init() {
     renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
@@ -226,6 +211,7 @@ function main_init() {
     }
     function render() {
         transformcontrol.update();
+        transformhelper.update();
         //orbitcontrol.update();
         // find intersections
         if (physicssimulation) {
@@ -480,7 +466,7 @@ function connectcorners(a,b){
     //return;
     //connectorb.position.copy(connectora.position);
     connectora.mergeWithConnector(connectorb);
-    scene.remove(connectorb);
+    //scene.remove(connectorb);
 }
 
 function disconnectcorners(corner,face){
@@ -578,10 +564,10 @@ function physicsoff(){
 function physicson(){
     if (physicssimulation) return;
     transformhelper.detach();
-    /*for (var i = objectgroup.length - 1; i >= 0; i--) {
-            objectgroup[i].__dirtyPosition = true;
-            objectgroup[i].__dirtyRotation = true;
-    };*/
+    for (var i = objectgroup.length - 1; i >= 0; i--) {
+            //objectgroup[i].__dirtyPosition = true;
+            //objectgroup[i].__dirtyRotation = true;
+    };
     physicssimulationcounter = 150;
     physicssimulation = true;
     scene.onSimulationResume();
@@ -632,8 +618,8 @@ function clearscene(){
    for (var i = objectgroup.length - 1; i >= 0; i--) {
        scene.remove (objectgroup[i]);
 
-        objectgroup[i].__dirtyPosition = true;
-        objectgroup[i].__dirtyRotation = true;
+        //objectgroup[i].__dirtyPosition = true;
+        //objectgroup[i].__dirtyRotation = true;
    };
 
     selectededges = [];
