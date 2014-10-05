@@ -1,6 +1,8 @@
 
 
 var logs = [];
+var serialized;
+var loadingmap = {};
 
 function log(action,arg1,arg2){
 
@@ -76,11 +78,55 @@ function getindexforcorner(element,corner){
 }
 
 function savelog(){
+
+    var objects = JSON.stringify(objectgroup);
+    //console.log(objects);
+    serialized = objects;
+    return;
+
     var blob = new Blob(log, {type: "text/plain;charset=utf-8"});
     saveAs(blob, "mylog.txt");
 }
 
 function loadlog(){
+    loadingmap = {};
+    var parsed = JSON.parse(serialized);
+    for (var i = parsed.length - 1; i >= 0; i--) {
+        var o = parsed[i];
+        var s = undefined;
+        switch(o['type']){
+            case 'Square':
+                s = new Square();
+                break;
+            case 'RightAngled':
+                s = new RightAngled();
+                break;
+            case 'Equilat':
+                s = new Equilat();
+                break;
+        }
+        if (s != undefined) {
+            s.parsejson(parsed[i]);
+            scene.add(s);
+            objectgroup.push(s); 
+        };
+    };
+
+    for (var i = parsed.length - 1; i >= 0; i--) {
+        var o = parsed[i];
+        var s = undefined;
+        switch(o['type']){
+            case 'CornerConnector':
+                s = new CornerConnector();
+                break;
+        }
+        if (s != undefined) {
+            scene.add(s);
+            objectgroup.push(s); 
+            s.parsejson(parsed[i]);
+        };
+    };
+    return;
     var blob = new Blob(log, {type: "text/plain;charset=utf-8"});
     saveAs(blob, "mylog.txt");
 }

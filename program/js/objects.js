@@ -177,11 +177,40 @@ CornerConnector = function(){
         if (this.mass == 0) {return color_nailed}
         else return color_default_connector;
     }
+    this.toJSON = function(){
+        //return this.id;
+        return {
+            'type':'CornerConnector',
+            //'constraints':JSON.stringify(this.constraints),
+            'corners':JSON.stringify(this.corners), 
+            'position':JSON.stringify(this.position)
+        }
+        //console.log('toJSON called');
+    };
+
+    this.parsejson = function(jsn){
+        loadingmap[jsn['id']]= this;
+        //var constraints = JSON.parse(jsn['edges']);
+        //return;
+        var pos = JSON.parse(jsn['position']);
+        this.position.set(pos.x,pos.y,pos.z);
+        updatematrices(this);
+        //this.applyMatrix (JSON.parse(jsn['matrixWorld']));
+        var corners = JSON.parse(jsn['corners']);
+        for (var i = 0; i < corners.length; i++) {
+            var c = loadingmap[corners[i].id];
+            //if (i == 0) c.configureconnector(this);
+            var newconstraint = c.connecttoconnector(this);
+            this.addcorner(c,newconstraint);
+        };
+
+        //
+    }
 
 }
 
 CornerConnector.prototype = Object.create(Physijs.SphereMesh.prototype);
-
+/*
 EdgeConnector = function(){
 
     var geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, edgelength, 13, 1);
@@ -204,12 +233,12 @@ EdgeConnector = function(){
 
 EdgeConnector.prototype = Object.create(Physijs.CylinderMesh.prototype);
 //Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
-
+*/
 Edge = function(c1,c2,parent,length) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
-    var reallength
-    length == undefined ?  reallength = edgelength : reallength = length;
+    var reallength = c1.position.distanceTo(c2.position)-2*cornerradius_symbolic;
+    //length == undefined ?  reallength = edgelength : reallength = length;
 
     this.geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, reallength, 13, 1);
     
@@ -288,6 +317,22 @@ Edge = function(c1,c2,parent,length) {
         if (this.mass == 0) {return color_nailed}
         else return color_default_connector;
     }
+
+    this.toJSON = function(){
+        return {
+            'id':this.id,
+            'corners':JSON.stringify(this.corners), 
+            'matrix':JSON.stringify(this.matrix),
+            //'matrixWorld':JSON.stringify(this.matrixWorld)
+        };
+    };
+    this.parsejson = function(jsn){
+        
+        loadingmap[jsn['id']]= this;
+        this.applyMatrix(JSON.parse(jsn['matrix']));
+        //this.applyMatrix (JSON.parse(jsn['matrixWorld']));
+        //updatematrices(this);
+    }
 };
 
 
@@ -330,18 +375,23 @@ Corner = function(parent) {
             var connector = new CornerConnector();
             scene.add(connector);
             objectgroup.push(connector);
-            var pos = this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position))
-            connector.position.set(pos.x,pos.y,pos.z);
-            connector.matrixAutoUpdate = false;
-            connector.updateMatrix();
-            connector.updateMatrixWorld();
-            connector.matrixAutoUpdate = true;
-            this.visible = false;
+            this.configureconnector(connector);
             constraint = this.connecttoconnector(connector);
         };
         return this.connector;
     }
+
+    this.configureconnector = function(connector){
+        var pos = this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position))
+        connector.position.set(pos.x,pos.y,pos.z);
+        connector.matrixAutoUpdate = false;
+        connector.updateMatrix();
+        connector.updateMatrixWorld();
+        connector.matrixAutoUpdate = true;
+    }
+
     this.connecttoconnector = function(connector){
+        this.visible = false;
         this.connector = connector;
         var constraint = new Physijs.PointConstraint(connector,this.parent, connector.position,this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position) ));
         scene.addConstraint(constraint);
@@ -349,6 +399,24 @@ Corner = function(parent) {
         connector.constraints[this.id] = constraint;
         return constraint;
     }
+
+    this.toJSON = function(){
+        return {
+            'id':this.id,
+            'matrix':JSON.stringify(this.matrix),
+            //'matrixWorld':JSON.stringify(this.matrixWorld)
+        };
+        //console.log('toJSON called');
+    };
+    this.parsejson = function(jsn){
+
+        loadingmap[jsn['id']]= this;
+        this.applyMatrix(JSON.parse(jsn['matrix']));
+        updatematrices(this);
+        //this.applyMatrix (JSON.parse(jsn['matrixWorld']));
+        //updatematrices(this);
+    }
+
 };
 
 
@@ -457,6 +525,40 @@ Square = function() {
     }
 
 
+    this.toJSON = function(){
+        //return this.id;
+        return {
+            'type':'Square',
+            'edges':JSON.stringify(this.edges),
+            'corners':JSON.stringify(this.corners), 
+            //'matrix':JSON.stringify(this.matrix),
+            'matrixWorld':JSON.stringify(this.matrixWorld)
+        }
+        //console.log('toJSON called');
+    };
+    this.parsejson = function(jsn){
+        loadingmap[jsn['id']]= this;
+        var edges = JSON.parse(jsn['edges']);
+        var corners = JSON.parse(jsn['corners']);
+        for (var i = 0; i < corners.length; i++) {
+            var c = new Corner(this);
+            this.corners.push(c)
+            this.add(c);
+            c.parsejson(corners[i]);
+        };
+        
+        for (var i = 0; i < edges.length ; i++) {
+            var e = new Edge(this.corners[i],this.corners[(i+1)%corners.length],this);
+            this.edges.push(e)
+            this.add(e);
+            e.parsejson(edges[i]);
+        };
+        //this.applyMatrix(JSON.parse(jsn['matrix']));
+        this.applyMatrix (JSON.parse(jsn['matrixWorld']));
+        updatematrices(this);
+    }
+
+
 };
 Square.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
@@ -550,6 +652,38 @@ RightAngled = function() {
             }
         };
         return this.edges[0];
+    }
+    this.toJSON = function(){
+        //return this.id;
+        return {
+            'type':'RightAngled',
+            'edges':JSON.stringify(this.edges),
+            'corners':JSON.stringify(this.corners), 
+            //'matrix':JSON.stringify(this.matrix),
+            'matrixWorld':JSON.stringify(this.matrixWorld)
+        }
+        //console.log('toJSON called');
+    };
+    this.parsejson = function(jsn){
+        loadingmap[jsn['id']]= this;
+        var edges = JSON.parse(jsn['edges']);
+        var corners = JSON.parse(jsn['corners']);
+        for (var i = 0; i < corners.length; i++) {
+            var c = new Corner(this);
+            this.corners.push(c)
+            this.add(c);
+            c.parsejson(corners[i]);
+        };
+        
+        for (var i = 0; i < edges.length ; i++) {
+            var e = new Edge(this.corners[i],this.corners[(i+1)%corners.length],this);
+            this.edges.push(e)
+            this.add(e);
+            e.parsejson(edges[i]);
+        };
+        //this.applyMatrix(JSON.parse(jsn['matrix']));
+        this.applyMatrix (JSON.parse(jsn['matrixWorld']));
+        updatematrices(this);
     }
 
 };
@@ -650,6 +784,39 @@ Equilat = function() {
             }
         };
         return this.edges[0];
+    }
+
+    this.toJSON = function(){
+        //return this.id;
+        return {
+            'type':'Equilat',
+            'edges':JSON.stringify(this.edges),
+            'corners':JSON.stringify(this.corners), 
+            //'matrix':JSON.stringify(this.matrix),
+            'matrixWorld':JSON.stringify(this.matrixWorld)
+        }
+        //console.log('toJSON called');
+    };
+    this.parsejson = function(jsn){
+        loadingmap[jsn['id']]= this;
+        var edges = JSON.parse(jsn['edges']);
+        var corners = JSON.parse(jsn['corners']);
+        for (var i = 0; i < corners.length; i++) {
+            var c = new Corner(this);
+            this.corners.push(c)
+            this.add(c);
+            c.parsejson(corners[i]);
+        };
+        
+        for (var i = 0; i < edges.length ; i++) {
+            var e = new Edge(this.corners[i],this.corners[(i+1)%corners.length],this);
+            this.edges.push(e)
+            this.add(e);
+            e.parsejson(edges[i]);
+        };
+        //this.applyMatrix(JSON.parse(jsn['matrix']));
+        this.applyMatrix (JSON.parse(jsn['matrixWorld']));
+        updatematrices(this);
     }
 };
 
