@@ -3,14 +3,14 @@
 var unitX = new THREE.Vector3( 1, 0, 0 );
 var unitY = new THREE.Vector3( 0, 1, 0 );
 var unitZ = new THREE.Vector3( 0, 0, 1 );
-var color_default = 0x888888;
+var color_default = 0xffffff;
 var color_hovered = 0x008888;
 var color_selected = 0xff0000;
 var color_nailed = 0xbbbbbb;
 var color_default_connector = 0x888888;
 
 var mass = undefined;
-var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture1.jpg");
+var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
 var cornerradius = 8;
 var offset = 15;
 var cornerradius_symbolic = 19;
@@ -18,6 +18,14 @@ var edgelength = 510;
 var squaregeom;
 var equigeom;
 var rectgeom;
+
+var elementmaterial = new THREE.MeshLambertMaterial({
+    color:color_default,
+    specular: color_default,
+    bumpMap: 0,
+    map:texture,
+    side:THREE.FrontSide
+});
 
 function loadmeshes(){
     var loader = new THREE.STLLoader();
@@ -56,7 +64,6 @@ TransformHelper = function(){
         this.refelement = refelement;
         this.target = target;
         this.setrefelement(refelement);
-        //THREE.SceneUtils.attach( target, scene, this );
         transformcontrol.attach(this);
     }
     this.setrefelement = function(refelement){
@@ -92,23 +99,7 @@ TransformHelper = function(){
         this.updatetarget();
     }
 }
-//initrotationhelper();
-/*
-function initrotationhelper(){
-    var geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: 0x888888, 
-        //map:texture,
-        //transparent: true, 
-        //opacity: 0.8,
-        side:THREE.FrontSide
-    });
 
-    var mesh = new THREE.Mesh(geometry,material);
-    transformhelper.add(mesh);
-}
-*/
 
 
 TransformHelper.prototype = Object.create(THREE.Mesh.prototype);
@@ -178,73 +169,39 @@ CornerConnector = function(){
         else return color_default_connector;
     }
     this.toJSON = function(){
-        //return this.id;
         return {
             'type':'CornerConnector',
-            //'constraints':JSON.stringify(this.constraints),
             'corners':JSON.stringify(this.corners), 
             'position':JSON.stringify(this.position)
         }
-        //console.log('toJSON called');
     };
 
     this.parsejson = function(jsn){
         loadingmap[jsn['id']]= this;
-        //var constraints = JSON.parse(jsn['edges']);
-        //return;
         var pos = JSON.parse(jsn['position']);
         this.position.set(pos.x,pos.y,pos.z);
         updatematrices(this);
-        //this.applyMatrix (JSON.parse(jsn['matrixWorld']));
         var corners = JSON.parse(jsn['corners']);
         for (var i = 0; i < corners.length; i++) {
             var c = loadingmap[corners[i].id];
-            //if (i == 0) c.configureconnector(this);
             var newconstraint = c.connecttoconnector(this);
             this.addcorner(c,newconstraint);
         };
-
-        //
     }
 
 }
 
 CornerConnector.prototype = Object.create(Physijs.SphereMesh.prototype);
-/*
-EdgeConnector = function(){
 
-    var geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, edgelength, 13, 1);
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: color_default_connector, 
-        //map:texture,
-        transparent: true, 
-        opacity: 0.8,
-        side:THREE.FrontSide
-    });
-
-    Physijs.CylinderMesh.call(this,geometry,material);
-
-    this.getdefaultcolor = function(){
-        if (this.mass == 0) {return color_nailed}
-        else return color_default_connector;
-    }
-}
-
-EdgeConnector.prototype = Object.create(Physijs.CylinderMesh.prototype);
-//Element.prototype = Object.create(Physijs.BoxMesh3.prototype);
-*/
-Edge = function(c1,c2,parent,length) {
+Edge = function(c1,c2,parent) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
     var reallength = c1.position.distanceTo(c2.position)-2*cornerradius_symbolic;
-    //length == undefined ?  reallength = edgelength : reallength = length;
 
     this.geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, reallength, 13, 1);
     
     var material = new THREE.MeshBasicMaterial({
         color: color_default_connector, 
-        //map:texture,
         transparent: true, 
         opacity: 0.8,
         side:THREE.FrontSide
@@ -289,15 +246,7 @@ Edge = function(c1,c2,parent,length) {
         axis = this.localToWorld(axis);
         console.log('axis: '+axis.x + ',' + axis.y + ',' + axis.z);
         return axis;
-        /*
-        var origin = new THREE.Vector3(0,0,0);
-        var axis = new THREE.Vector3(0,edgelength/2+offset,0);
-        origin = this.localToWorld( origin );
-        axis = this.localToWorld( axis );
-        axis = axis.sub(origin);
-        
-        return axis;
-        */
+    
     };
 
     this.geteuler = function(){
@@ -323,15 +272,13 @@ Edge = function(c1,c2,parent,length) {
             'id':this.id,
             'corners':JSON.stringify(this.corners), 
             'matrix':JSON.stringify(this.matrix),
-            //'matrixWorld':JSON.stringify(this.matrixWorld)
         };
     };
     this.parsejson = function(jsn){
         
         loadingmap[jsn['id']]= this;
         this.applyMatrix(JSON.parse(jsn['matrix']));
-        //this.applyMatrix (JSON.parse(jsn['matrixWorld']));
-        //updatematrices(this);
+
     }
 };
 
@@ -404,17 +351,13 @@ Corner = function(parent) {
         return {
             'id':this.id,
             'matrix':JSON.stringify(this.matrix),
-            //'matrixWorld':JSON.stringify(this.matrixWorld)
         };
-        //console.log('toJSON called');
     };
     this.parsejson = function(jsn){
 
         loadingmap[jsn['id']]= this;
         this.applyMatrix(JSON.parse(jsn['matrix']));
         updatematrices(this);
-        //this.applyMatrix (JSON.parse(jsn['matrixWorld']));
-        //updatematrices(this);
     }
 
 };
@@ -424,22 +367,12 @@ Corner.prototype = Object.create(THREE.Mesh.prototype);
 
 Square = function() {
 
-    var material = new THREE.MeshBasicMaterial({
-                color:color_default,
-                map:texture,
-                side:THREE.FrontSide
-    });
+    this.geometry = squaregeom;
+    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial,mass);
 
-        
-    this.geometry = squaregeom; //new THREE.Geometry();
-
-
-    Physijs.ConvexMesh.call(this,this.geometry,material,mass);
-
-    //geometry.merge(this);
-
+    this.castShadow = true;
+    this.receiveShadow = true;
     this.position.set( 0, 0, 0 );
-
     this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
 
     this.selected = false;
@@ -481,12 +414,7 @@ Square = function() {
         this.edges.push(e2);
         this.edges.push(e3);
         this.edges.push(e4);
-        /*
-        this.geometry.merge(e1.geometry);
-        this.geometry.merge(e2.geometry);
-        this.geometry.merge(e3.geometry);
-        this.geometry.merge(e4.geometry);
-        */
+
     }
 
     this.addcorner = function(name){
@@ -509,7 +437,7 @@ Square = function() {
                 centerpos.sub(v2);
                 break;
         }
-        c.position.set(centerpos.x,centerpos.y,centerpos.z);// = center;
+        c.position.set(centerpos.x,centerpos.y,centerpos.z);
         this.corners.push(c);
         this.add(c);
         return c;
@@ -526,15 +454,12 @@ Square = function() {
 
 
     this.toJSON = function(){
-        //return this.id;
         return {
             'type':'Square',
             'edges':JSON.stringify(this.edges),
             'corners':JSON.stringify(this.corners), 
-            //'matrix':JSON.stringify(this.matrix),
             'matrixWorld':JSON.stringify(this.matrixWorld)
         }
-        //console.log('toJSON called');
     };
     this.parsejson = function(jsn){
         loadingmap[jsn['id']]= this;
@@ -553,7 +478,6 @@ Square = function() {
             this.add(e);
             e.parsejson(edges[i]);
         };
-        //this.applyMatrix(JSON.parse(jsn['matrix']));
         this.applyMatrix (JSON.parse(jsn['matrixWorld']));
         updatematrices(this);
     }
@@ -563,23 +487,10 @@ Square = function() {
 Square.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
 RightAngled = function() {
-    
-    var material = new THREE.MeshBasicMaterial({
-                color:color_default,
-                map:texture,
-                side:THREE.FrontSide
-    });
-
         
-    this.geometry = rectgeom; //new THREE.Geometry();
-
-
-    Physijs.ConvexMesh.call(this,this.geometry,material,mass);
-
-    //geometry.merge(this);
-
+    this.geometry = rectgeom; 
+    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial,mass);
     this.position.set( 0, 0, 0 );
-
     this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
 
     this.selected = false;
@@ -639,7 +550,7 @@ RightAngled = function() {
                 centerpos.sub(v2);
                 break;
         }
-        c.position.set(centerpos.x,centerpos.y,centerpos.z);// = center;
+        c.position.set(centerpos.x,centerpos.y,centerpos.z);
         this.corners.push(c);
         this.add(c);
         return c;
@@ -654,15 +565,12 @@ RightAngled = function() {
         return this.edges[0];
     }
     this.toJSON = function(){
-        //return this.id;
         return {
             'type':'RightAngled',
             'edges':JSON.stringify(this.edges),
             'corners':JSON.stringify(this.corners), 
-            //'matrix':JSON.stringify(this.matrix),
             'matrixWorld':JSON.stringify(this.matrixWorld)
         }
-        //console.log('toJSON called');
     };
     this.parsejson = function(jsn){
         loadingmap[jsn['id']]= this;
@@ -681,7 +589,6 @@ RightAngled = function() {
             this.add(e);
             e.parsejson(edges[i]);
         };
-        //this.applyMatrix(JSON.parse(jsn['matrix']));
         this.applyMatrix (JSON.parse(jsn['matrixWorld']));
         updatematrices(this);
     }
@@ -690,21 +597,9 @@ RightAngled = function() {
 RightAngled.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
 Equilat = function() {
-
-    var material = new THREE.MeshBasicMaterial({
-                color:color_default,
-                map:texture,
-                side:THREE.FrontSide
-    });
-
         
-    this.geometry = equigeom; //new THREE.Geometry();
-
-
-    Physijs.ConvexMesh.call(this,this.geometry,material,mass);
-
-    //geometry.merge(this);
-
+    this.geometry = equigeom; 
+    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial,mass);
     this.position.set( 0, 0, 0 );
 
     this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
@@ -745,12 +640,6 @@ Equilat = function() {
         this.edges.push(e1);
         this.edges.push(e2);
         this.edges.push(e3);
-        /*
-        this.geometry.merge(e1.geometry);
-        this.geometry.merge(e2.geometry);
-        this.geometry.merge(e3.geometry);
-        this.geometry.merge(e4.geometry);
-        */
 
     }
 
@@ -771,7 +660,7 @@ Equilat = function() {
                 centerpos.sub(v1);
                 break;
         }
-        c.position.set(centerpos.x,centerpos.y,centerpos.z);// = center;
+        c.position.set(centerpos.x,centerpos.y,centerpos.z);
         this.corners.push(c);
         this.add(c);
         return c;
@@ -792,10 +681,8 @@ Equilat = function() {
             'type':'Equilat',
             'edges':JSON.stringify(this.edges),
             'corners':JSON.stringify(this.corners), 
-            //'matrix':JSON.stringify(this.matrix),
             'matrixWorld':JSON.stringify(this.matrixWorld)
         }
-        //console.log('toJSON called');
     };
     this.parsejson = function(jsn){
         loadingmap[jsn['id']]= this;
@@ -814,7 +701,6 @@ Equilat = function() {
             this.add(e);
             e.parsejson(edges[i]);
         };
-        //this.applyMatrix(JSON.parse(jsn['matrix']));
         this.applyMatrix (JSON.parse(jsn['matrixWorld']));
         updatematrices(this);
     }
@@ -834,11 +720,11 @@ Table = function(){
                 side:THREE.FrontSide
     });
 
-        
-    var geometry = new THREE.PlaneGeometry(20000,20000,5,5); //new THREE.Geometry();
-    //geometry.computeBoundingBox();
+    
+    var geometry = new THREE.PlaneGeometry(20000,20000,5,5);
 
     Physijs.PlaneMesh.call(this,geometry,material);
+    this.receiveShadow = true;
     rotatearoundaxis(this,'X',-Math.PI/2);
     this.position.y = -100;
 
@@ -932,21 +818,40 @@ function updatematrices(element){
     element.__dirtyRotation = true;
 }
 
+function hideedges(){
+    console.log('hideedges');
+    for (var i = objectgroup.length - 1; i >= 0; i--) {
+        var obj = objectgroup[i];
+        if (obj instanceof CornerConnector) obj.visible = false;
+        else {
+            for (var j = obj.edges.length - 1; j >= 0; j--) {
+                obj.edges[j].visible = false;
+            };
+            for (var j = obj.corners.length - 1; j >= 0; j--) {
+                obj.corners[j].visible = false;
+            };
+        };
+    };
+}
+function showedges(){
+    console.log('showedges');
+    for (var i = objectgroup.length - 1; i >= 0; i--) {
+        var obj = objectgroup[i];
+        if (obj instanceof CornerConnector) obj.visible = true;
+        else {
+            for (var j = obj.edges.length - 1; j >= 0; j--) {
+                obj.edges[j].visible = true;
+            };
+            for (var j = obj.corners.length - 1; j >= 0; j--) {
+                if (obj.corners[j].connector == undefined) obj.corners[j].visible = true;
+            };
+        };
+    };
+}
 function rotateAroundWorldAxis(object, axis, radians) {
     var rotWorldMatrix = new THREE.Matrix4();
     rotWorldMatrix.makeRotationAxis(axis.normalize(), radians);
-
-    // old code for Three.JS pre r54:
-    //  rotWorldMatrix.multiply(object.matrix);
-    // new code for Three.JS r55+:
-    rotWorldMatrix.multiply(object.matrix);                // pre-multiply
-
+    rotWorldMatrix.multiply(object.matrix);               
     object.matrix = rotWorldMatrix;
-
-    // old code for Three.js pre r49:
-    // object.rotation.getRotationFromMatrix(object.matrix, object.scale);
-    // old code for Three.js pre r59:
-    // object.rotation.setEulerFromRotationMatrix(object.matrix);
-    // code for r59+:
     object.rotation.setFromRotationMatrix(object.matrix);
 }

@@ -24,16 +24,19 @@ var canvas = document.getElementById('viewer');
 var gravity = new THREE.Vector3( 0, 0, 0 );
 var scale = 0.01;
 var boxsize = 20000;
+var helpervisibility = true;
+
 
 var transformhelper = new TransformHelper();
 scene.add(transformhelper);
-//var rotationhelper = new THREE.Object3D();
-//scene.add(rotationhelper);
 
 
 function main_init() {
     renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
     renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.shadowMapEnabled = true;
+    renderer.shadowMapType = THREE.PCFSoftShadowMap;
+
     loadmeshes();
 
     camera.position.set(1060.698, 792.767722,988.59642); 
@@ -42,19 +45,15 @@ function main_init() {
     raycaster.linePrecision = 0.3;
 
     scene.setGravity(gravity);
-    
-    
-
 
     
-    //renderer.setSize( window.innerWidth, window.innerHeight );
-    // renderer
+    // LIGHTS
 
-    
-    
+    var ambient = new THREE.AmbientLight( 0x777777 );
+    scene.add( ambient );
+    addspotlight();
+    addShadowedLight(1500,1500,1500,0x555555,1);
 
-    // Skybox
-    
     var urls = [
       'textures/skybox/sky/right.jpg',
       'textures/skybox/sky/left.jpg',
@@ -84,62 +83,9 @@ function main_init() {
       new THREE.BoxGeometry(boxsize, boxsize, boxsize),
       skyBoxMaterial
     );
-    //skybox.position.set(0,49999,0);//add(0,5000,0);
 
     scene.add(skybox);
     
-
-
-    /*
-    var material = new THREE.MeshLambertMaterial({
-        envMap: cubemap
-    });
-    mesh = new THREE.Mesh( new THREE.BoxGeometry( 10000000, 10000000, 10000000 ), material );
-    scene.add( mesh );
-
-    
-
-    // Materials
-    var table_material = Physijs.createMaterial(
-        new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture( 'textures/wood_texture1.jpg' ), ambient: 0x888888 }),
-        .9, // high friction
-        .2 // low restitution
-    );
-    table_material.map.wrapS = table_material.map.wrapT = THREE.RepeatWrapping;
-    table_material.map.repeat.set( 5, 5 );
-
-    // Table
-    var table = new Physijs.BoxMesh(
-        new THREE.BoxGeometry(50, 1, 50),
-        material,
-        0, // mass
-        { restitution: .2, friction: .8 }
-    );
-    table.position.y = -10;
-    table.receiveShadow = true;
-    scene.add( table );
-    
-    /*
-    var PI2 = Math.PI * 2;
-    var program = function ( context ) {
-
-        context.beginPath();
-        context.arc( 0, 0, 0.5, 0, PI2, true );
-        context.fill();
-
-    }
-
-    sphereInter = new THREE.Sprite(
-        new THREE.SpriteCanvasMaterial( {
-            color: 0xff0000,
-            program: program }
-        )
-    );
-    sphereInter.scale.x = sphereInter.scale.y = 10;
-    sphereInter.visible = false;
-    //scene.add( sphereInter );
-    */
-    //document.body.appendChild( renderer.domElement );
     var table = new Table();
     scene.add(table);
     
@@ -151,26 +97,13 @@ function main_init() {
     canvas.addEventListener( 'click', onDocumentMouseClick, false );
     
     scene.add( new THREE.GridHelper( boxsize/2, edgelength ) );
-   
-    
 
-    
-
-    /*
-    var square1 = new Square();
-    objectgroup.push(square1);
-    scene.add(square1);
-    square1.initconstraints();
-    */
-
-   
-    
     transformcontrol = new THREE.TransformControls( camera, renderer.domElement );
 
     transformcontrol.addEventListener( 'change', render );
 
     canvas.addEventListener( 'keydown', function ( event ) {
-        //console.log(event.which);
+        
         switch ( event.keyCode ) {
           case 81: // Q
             transformcontrol.setSpace( transformcontrol.space == "local" ? "world" : "local" );
@@ -212,8 +145,6 @@ function main_init() {
     function render() {
         transformcontrol.update();
         transformhelper.update();
-        //orbitcontrol.update();
-        // find intersections
         if (physicssimulation) {
             physicsautooff();
             scene.simulate(); // run physic
@@ -279,16 +210,11 @@ function onDocumentMouseClick(){
             deselectcorners();
             deselectedges();
             transformhelper.detach();
-            //detachToRotationHelper();
-            //controllee = null;
             orbitcontrol.enabled = true;
         }
         else if (currentIntersected.transformable) {
-            //attachToRotationHelper(currentIntersected);
-            //controllee = currentIntersected;
             physicssimulation = false;
             transformhelper.attach( currentIntersected);
-            //transformcontrol.attach(transformhelper); 
             orbitcontrol.enabled = false; 
         }
         else{
@@ -335,6 +261,24 @@ function onDocumentMouseMove( event ) {
 
 }
 
+
+function addspotlight(){
+    light = new THREE.SpotLight( 0x666666, 1, 0, Math.PI / 2, 1 );
+    light.position.set( boxsize/4, boxsize/4, boxsize/4 );
+    light.target.position.set( 0, 0, 0 );
+
+    light.castShadow = true;
+
+    light.shadowCameraNear = 1200;
+    light.shadowCameraFar = boxsize/2;
+    light.shadowCameraFov = 50;
+
+    light.shadowBias = 0.00001;
+    light.shadowDarkness = 0.18;
+
+    scene.add( light );
+}
+
 function addShadowedLight( x, y, z, color, intensity ) {
 
     var directionalLight = new THREE.DirectionalLight( color, intensity );
@@ -342,7 +286,7 @@ function addShadowedLight( x, y, z, color, intensity ) {
     scene.add( directionalLight );
 
     directionalLight.castShadow = true;
-    // directionalLight.shadowCameraVisible = true;
+     //directionalLight.shadowCameraVisible = true;
 
     var d = 1;
     directionalLight.shadowCameraLeft = -d;
@@ -351,20 +295,19 @@ function addShadowedLight( x, y, z, color, intensity ) {
     directionalLight.shadowCameraBottom = -d;
 
     directionalLight.shadowCameraNear = 1;
-    directionalLight.shadowCameraFar = 4;
+    directionalLight.shadowCameraFar = 3000;
 
     directionalLight.shadowMapWidth = 1024;
     directionalLight.shadowMapHeight = 1024;
 
     directionalLight.shadowBias = -0.005;
-    directionalLight.shadowDarkness = 0.15;
+    directionalLight.shadowDarkness = 0.015;
 
 }
 
 function executecommand(command){
 
     command = command ?  command.split() : document.getElementById('command').value.split();
-    //console.log(command);
     switch(command[0]){
         case 'test1':
             test1();
@@ -377,7 +320,6 @@ function executecommand(command){
             break;
 
         case 'square':
-            //if (selectededges.length == 0)return;
             var s = new Square();
             objectgroup.push(s);
             scene.add(s);
@@ -387,10 +329,6 @@ function executecommand(command){
             if (selectededges.length > 0) {
                 addtoedge(s,selectededges[0]);
             };
-            
-            //select (s.edges[0]);
-            //bindedges(selectededges[0],s.edges[0]);
-            
             break;
         case 'equilat':
             var s = new Equilat();
@@ -423,230 +361,24 @@ function executecommand(command){
             else if (selectedcorners.length == 2) {
                 log('connectcorners',selectedcorners[0],selectedcorners[1]);
                 connectcorners(selectedcorners[0],selectedcorners[1]);}
-            //bindedges(selectededges[0],selectededges[1]);
             break;
         case 'nail':
-            nail(selectededges[0]);
-            log('nail',selectededges[0].parent);
+            if (transformhelper.target == undefined) return;
+            nail(transformhelper.target);
+            log('nail',transformhelper.target);
             break;
         case 'disconnect':
-            if (selectedcorners.length == 1 && transformhelper.controllee != undefined){
-                log('disconnectcorner',selectedcorners[0],transformhelper.controllee);
-                disconnectcorners(selectedcorners[0],transformhelper.controllee);
+            if (selectedcorners.length == 1 && transformhelper.target != undefined){
+                log('disconnectcorner',selectedcorners[0],transformhelper.target);
+                disconnectcorners(selectedcorners[0],transformhelper.target);
             }
-            else if (selectededges.length == 1 && transformhelper.controllee != undefined){
-                log('disconnectedge',selectededges[0],transformhelper.controllee);
-                disconnectedges(selectededges[0],transformhelper.controllee);
+            else if (selectededges.length == 1 && transformhelper.target != undefined){
+                log('disconnectedge',selectededges[0],transformhelper.target);
+                disconnectedges(selectededges[0],transformhelper.target);
             }
             break;
     }
 }
 
-function deselectedges(){
-    for (var i = selectededges.length - 1; i >= 0; i--) {
-        deselect(selectededges[i]);
-    };
-    selectededges = [];
-}
-function deselectcorners(){
-
-    for (var i = selectedcorners.length - 1; i >= 0; i--) {
-        deselect(selectedcorners[i]);
-    };
-    selectedcorners = [];
-}
-
-function connectcorners(a,b){
-    transformhelper.detach();
-    deselectcorners();
-    physicson()
-    var connectora = a.getconnector();
-    var connectorb = b.getconnector();
-    if (connectora == connectorb) return;
-    //return;
-    //connectorb.position.copy(connectora.position);
-    connectora.mergeWithConnector(connectorb);
-    //scene.remove(connectorb);
-}
-
-function disconnectcorners(corner,face){
-    transformhelper.detach();
-    deselectcorners();
-    physicson()
-   var connector = corner.getconnector();
-   var corner
-   for (var i = connector.corners.length - 1; i >= 0; i--) {
-       if (connector.corners[i].parent == face) {
-            corner = connector.corners[i];
-            break;
-        }
-   };
-   if (connector.removecorner(corner)) corner.visible = true;
-    
-   
-}
-
-function connectedges(a,b){
-    transformhelper.detach();
-    deselectedges();
-    physicson()
-    var a1 = a.corners[0];
-    var a2 = a.corners[1];
-    var b1 = b.corners[0];
-    var b2 = b.corners[1];
-
-    var normaldist = a1.position.distanceToSquared(b1.position)+a2.position.distanceToSquared(b2.position);
-    var crossdist = a1.position.distanceToSquared(b2.position)+a2.position.distanceToSquared(b1.position);
-    if (crossdist<normaldist) {var temp = b1; b1 = b2; b2 = temp;};
-
-    connectcorners(a1,b1);
-    connectcorners(a2,b2);
-}
-function disconnectedges(a,b){
-    transformhelper.detach();
-    deselectedges();
-    physicson()
-  var a1 = a.corners[0];
-  var a2 = a.corners[1];
-
-  disconnectcorners(a1,b);
-  disconnectcorners(a2,b);
-}
-
-function addtoedge(element,edge){
-
-    transformhelper.detach();
-    var pos = edge.position.clone();
-    edge.parent.localToWorld(pos);
-    element.position.set(pos.x,pos.y,pos.z);
-    element.matrixAutoUpdate = false;
-    element.updateMatrix();
-    element.updateMatrixWorld();
-    element.matrixAutoUpdate = true;
-    element.__dirtyPosition = true;
-    element.__dirtyRotation = true;
-    connectedges(element.edges[0],edge);
-}
-
-
-
-
-function nail(mymesh){
-    if (mymesh.mass !=0){
-        mymesh.mass = 0;
-        mymesh.material.color.set (color_nailed);
-    }
-    else{
-        mymesh.mass = 5;
-        mymesh.material.color.set (color_default);
-    };
-    
-    /*
-    var constraint = new Physijs.PointConstraint(
-        mymesh, // First object to be constrained
-        mymesh.position // point in the scene to apply the constraint
-    );
-    scene.addConstraint( constraint );
-    */
-
-}
-
-function physicsswitch(){
-    if (! physicssimulation) physicson();
-    else{
-        physicsoff();
-    }
-}
-function physicsoff(){
-    physicssimulation = false;
-};
-
-function physicson(){
-    if (physicssimulation) return;
-    transformhelper.detach();
-    for (var i = objectgroup.length - 1; i >= 0; i--) {
-            //objectgroup[i].__dirtyPosition = true;
-            //objectgroup[i].__dirtyRotation = true;
-    };
-    physicssimulationcounter = 150;
-    physicssimulation = true;
-    scene.onSimulationResume();
-}
-
-function physicsautooff(){
-
-    var shouldstopphysics = true;
-    physicssimulationcounter--;
-    if (physicssimulationcounter >=0) {
-        shouldstopphysics = false;
-    };
-    
-    for (var i = objectgroup.length - 1; i >= 0; i--) {
-        var obj = objectgroup[i]
-        if (obj instanceof Square){
-
-             
-            var linear = obj.getLinearVelocity();
-            obj.setLinearVelocity(linear.multiplyScalar(0.87));
-
-            var angular = obj.getAngularVelocity();
-            obj.setAngularVelocity(angular.multiplyScalar(0.87));
-
-            if (shouldstopphysics == true) {
-                if (linear.length()>1 || angular.length()>1) shouldstopphysics = false;
-            };
-        }
-        
-    };
-
-    if (shouldstopphysics) physicssimulation = false;
-}
-function gravityswitch(){
-    if (gravity.y == 0) {gravity.y = -7}
-    else {gravity.y = 0;}
-    
-    scene.setGravity(gravity);
-    
-}
-
-function clearscene(){
-    var constraints = scene._constraints;
-   for (var i in constraints) {
-        var constraint = constraints[i];
-        scene.removeConstraint(constraint);
-   };
-   for (var i = objectgroup.length - 1; i >= 0; i--) {
-       scene.remove (objectgroup[i]);
-
-        //objectgroup[i].__dirtyPosition = true;
-        //objectgroup[i].__dirtyRotation = true;
-   };
-
-    selectededges = [];
-    selectedcorners = [];
-    objectgroup = [];
-    physicsoff();
-
-}
-function changed(){
-    alert('changed');
-}
-attachToRotationHelper = function(element){
-    return;
-    var rotcenter = element.getselectededge();
-    if (rotcenter == undefined) return;
-    var rotmatrix = new THREE.Matrix4();
-    var d = new THREE.Matrix4;
-    d.getInverse(rotationhelper.matrixWorld);
-    rotationhelper.applyMatrix(d);
-    rotationhelper.applyMatrix(rotcenter.matrixWorld.clone());
-    updatematrices(this.rotationhelper);
-    THREE.SceneUtils.attach( element, scene, rotationhelper );
-};
-detachToRotationHelper = function(){
-    return;
-    if (controllee.children.length > 2) return;
-    THREE.SceneUtils.detach( controllee.children[0], rotationhelper,scene);
-};
 
 
