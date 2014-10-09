@@ -146,11 +146,15 @@ function main_init() {
     function render() {
         transformcontrol.update();
         transformhelper.update();
+        
+        for (var i = objectgroup.length - 1; i >= 0; i--) {
+            if (objectgroup[i] instanceof CornerConnector) continue;
+            objectgroup[i].rendercallback();
+        };
         if (physicssimulation) {
             physicsautooff();
             scene.simulate(); // run physic
         };
-        
         renderer.render( scene, camera );
     }
     function update() {
@@ -257,8 +261,6 @@ function onDocumentMouseMove( event ) {
     var rect = canvas.getBoundingClientRect();
     mouse.x = ( (event.clientX-rect.left)/ window.innerWidth ) * 2 - 1;
     mouse.y = - ( (event.clientY-rect.top) / window.innerHeight ) * 2 + 1;
-    
-
 
 }
 

@@ -9,7 +9,7 @@ var color_selected = 0xff0000;
 var color_nailed = 0xbbbbbb;
 var color_default_connector = 0x888888;
 
-var elementmass = undefined;
+var elementmass = 500;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
 var cornerradius = 8;
 var offset = 15;
@@ -121,7 +121,7 @@ CornerConnector = function(){
     this.constraints = {};
     this.corners = [];
 
-    Physijs.SphereMesh.call(this,geometry,material,500);
+    Physijs.SphereMesh.call(this,geometry,material,1);
 
     this.addcorner = function(corner,constraint){
         this.constraints[corner.id] = constraint;
@@ -327,10 +327,9 @@ Corner = function(parent) {
     this.configureconnector = function(connector){
         var pos = this.parent.localToWorld(new THREE.Vector3(0,0,0).copy(this.position))
         connector.position.set(pos.x,pos.y,pos.z);
-        connector.matrixAutoUpdate = false;
-        connector.updateMatrix();
-        connector.updateMatrixWorld();
-        connector.matrixAutoUpdate = true;
+        updatematrices(connector);
+        connector.__dirtyPosition = true;
+        connector.__dirtyRotation = true;
     }
 
     this.connecttoconnector = function(connector){
@@ -355,6 +354,9 @@ Corner = function(parent) {
         this.applyMatrix(JSON.parse(jsn['matrix']));
         updatematrices(this);
     }
+    this.rendercallback = function(){
+        if (this.connector != undefined) this.configureconnector(this.connector);
+    }
 
 };
 Corner.prototype = Object.create(THREE.Mesh.prototype);
@@ -365,8 +367,10 @@ Element = function(geometry){
     this.transformable = true; 
     this.corners = [];
     this.edges = [];
+    this.nailed = false;
+    this.nailedMatrix = undefined;
 
-    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),500);
+    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),elementmass);
 
     this.initconstraints = function(){
 
@@ -422,8 +426,19 @@ Element = function(geometry){
             this.add(e);
             e.parsejson(edges[i]);
         };
+        this.addconnectors();
         this.applyMatrix (JSON.parse(jsn['matrixWorld']));
         updatematrices(this);
+    }
+    this.rendercallback = function(){
+        if (!this.nailed) return;
+        this.matrix = this.nailedMatrix;
+        this.matrix.decompose(this.position, this.quaternion, this.scale);
+        this.__dirtyRotation = true;
+        this.__dirtyPosition = true;
+        for (var i = this.corners.length - 1; i >= 0; i--) {
+            this.corners[i].rendercallback();
+        };
     }
 }
 Element.prototype = Object.create(Physijs.ConvexMesh.prototype);

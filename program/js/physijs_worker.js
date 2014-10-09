@@ -530,6 +530,7 @@ public_functions.updateTransform = function( details ) {
 };
 
 public_functions.updateMass = function( details ) {
+
 	// #TODO: changing a static object into dynamic is buggy
 	_object = _objects[details.id];
 	
@@ -544,6 +545,7 @@ public_functions.updateMass = function( details ) {
 	world.addRigidBody( _object );
 	_object.activate();
 };
+
 
 public_functions.applyCentralImpulse = function ( details ) {
 	

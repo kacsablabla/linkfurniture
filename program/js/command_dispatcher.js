@@ -61,7 +61,6 @@ function executecommand(command){
         case 'nail':
             if (transformhelper.target == undefined) return;
             nail(transformhelper.target);
-            log('nail',transformhelper.target);
             break;
         case 'disconnect':
             if (selectedcorners.length == 1 && transformhelper.target != undefined){

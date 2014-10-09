@@ -19,11 +19,14 @@ function connectcorners(a,b){
     if (a.parent == b.parent) return;
     transformhelper.detach();
     deselectcorners();
-    physicson()
     var connectora = a.getconnector();
+    console.log('connectora position: '+connectora.position);
     var connectorb = b.getconnector();
+    console.log('connectorb position: '+connectorb.position);
     if (connectora == connectorb) return;
     connectora.mergeWithConnector(connectorb);
+    console.log('merged position: '+connectorb.position);
+    physicson();
 }
 
 function disconnectcorners(corner,face){
@@ -47,7 +50,6 @@ function connectedges(a,b){
     if (a.parent == b.parent) return;
     transformhelper.detach();
     deselectedges();
-    physicson()
     var a1 = a.corners[0];
     var a2 = a.corners[1];
     var b1 = b.corners[0];
@@ -64,6 +66,7 @@ function connectedges(a,b){
 
     connectcorners(a1,b1);
     connectcorners(a2,b2);
+    //physicson();
 }
 function disconnectedges(a,b){
     transformhelper.detach();
@@ -93,15 +96,8 @@ function addtoedge(element,edge){
 }
 
 function nail(mymesh){
-    if (mymesh.mass !=0){
-        mymesh.mass = 0;
-        mymesh.material.color.set (color_nailed);
-    }
-    else{
-        mymesh.mass = 5;
-        mymesh.material.color.set (color_default);
-    };
-
+    mymesh.nailed = !mymesh.nailed;
+    if (mymesh.nailed) mymesh.nailedMatrix = mymesh.matrixWorld.clone();
 }
 
 function physicsswitch(){
@@ -117,6 +113,10 @@ function physicsoff(){
 function physicson(){
     if (physicssimulation) return;
     transformhelper.detach();
+    for (var i = objectgroup.length - 1; i >= 0; i--) {
+        objectgroup[i].__dirtyRotation = true;
+        objectgroup[i].__dirtyPosition = true;
+    };
     physicssimulationcounter = 150;
     physicssimulation = true;
     scene.onSimulationResume();
@@ -134,12 +134,14 @@ function physicsautooff(){
         var obj = objectgroup[i]
         if (obj instanceof Element){
 
+            var factor = 0.89;
+            //if (obj.nailed) {factor = 0};
              
             var linear = obj.getLinearVelocity();
-            obj.setLinearVelocity(linear.multiplyScalar(0.89));
+            obj.setLinearVelocity(linear.multiplyScalar(factor));
 
             var angular = obj.getAngularVelocity();
-            obj.setAngularVelocity(angular.multiplyScalar(0.89));
+            obj.setAngularVelocity(angular.multiplyScalar(factor));
 
             if (shouldstopphysics == true) {
                 if (linear.length()>1 || angular.length()>1) shouldstopphysics = false;
