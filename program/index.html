@@ -16,22 +16,25 @@
 			       tabindex='1' />
 
 			<button id="execute" onclick="executecommand()">execute</button>
-			<button id="test" onclick='executecommand("test2")'>test</button>
+			<button id="test" onclick='executecommand("test4")'>test</button>
 			<button id="physics" onclick="physicsswitch()">physics</button>
 			<button id="square" onclick='executecommand("square")'>square</button>
 			<button id="equilat" onclick='executecommand("equilat")'>equilat</button>
 			<button id="rightangle" onclick='executecommand("rightangle")'>rightangle</button>
 			<button id="connect" onclick="executecommand('connect')">connect</button>
 			<button id="disconnect" onclick="executecommand('disconnect')">disconnect</button>
-			<button id="nail" onclick="nail(controllee)">nail</button>
+			<button id="nail" onclick="executecommand('nail')">nail</button>
 			<button id="gravity" onclick="gravityswitch()">gravity</button>
 			<button id="poplog" onclick="poplog()">undo</button>
 			<button id="save" onclick="savelog()">save</button>
 			<button id="load" onclick="loadlog()">load</button>
+			
 			<button id="parasztvakitas" onclick="peasantblinding()">parasztvakitas</button>
+			<button id="connectoradd" onclick="createconnectormesh()">connectoradd</button>
 		</div>
 		<canvas id="viewer" tabindex='1'>
 
+			<script type="text/javascript" src="js/command_dispatcher.js"></script>
 			<script type="text/javascript" src="js/log.js"></script>
 			<script type="text/javascript" src="js/three.min.js"></script>
 			<script type="text/javascript" src="js/physi.js"></script>
@@ -40,6 +43,7 @@
 	        <script type="text/javascript" src="js/objects.js"></script>
 	        <script type="text/javascript" src="js/geometry.js"></script>
 	        <script type="text/javascript" src="js/tests.js"></script>
+	        <script type="text/javascript" src="js/connectors_utility.js"></script>
 	        <script type="text/javascript" src="js/OrbitControls.js"></script>
 	        <script type="text/javascript" src="js/TransformControls.js"></script>
 	        	

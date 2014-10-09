@@ -25,7 +25,9 @@ var gravity = new THREE.Vector3( 0, 0, 0 );
 var scale = 0.01;
 var boxsize = 20000;
 var helpervisibility = true;
-
+var light_ambient;
+var light_spot;
+var light_directional;
 
 var transformhelper = new TransformHelper();
 scene.add(transformhelper);
@@ -45,14 +47,13 @@ function main_init() {
     raycaster.linePrecision = 0.3;
 
     scene.setGravity(gravity);
-
     
     // LIGHTS
 
-    var ambient = new THREE.AmbientLight( 0x777777 );
-    scene.add( ambient );
+    light_ambient = new THREE.AmbientLight( 0x777777 );
+    scene.add( light_ambient );
     addspotlight();
-    addShadowedLight(1500,1500,1500,0x555555,1);
+    addShadowedLight(1500,1500,1500,0xffffff,0.33);
 
     var urls = [
       'textures/skybox/sky/right.jpg',
@@ -263,122 +264,49 @@ function onDocumentMouseMove( event ) {
 
 
 function addspotlight(){
-    light = new THREE.SpotLight( 0x666666, 1, 0, Math.PI / 2, 1 );
-    light.position.set( boxsize/4, boxsize/4, boxsize/4 );
-    light.target.position.set( 0, 0, 0 );
+    light_spot = new THREE.SpotLight( 0xffffff, 0.33, 0, Math.PI / 2, 1 );
+    light_spot.position.set( boxsize/4, boxsize/4, boxsize/4 );
+    light_spot.target.position.set( 0, 0, 0 );
 
-    light.castShadow = true;
+    light_spot.castShadow = true;
 
-    light.shadowCameraNear = 1200;
-    light.shadowCameraFar = boxsize/2;
-    light.shadowCameraFov = 50;
+    light_spot.shadowCameraNear = 1200;
+    light_spot.shadowCameraFar = boxsize/2;
+    light_spot.shadowCameraFov = 50;
 
-    light.shadowBias = 0.00001;
-    light.shadowDarkness = 0.18;
+    light_spot.shadowBias = 0.00001;
+    light_spot.shadowDarkness = 0.18;
 
-    scene.add( light );
+    scene.add( light_spot );
 }
 
 function addShadowedLight( x, y, z, color, intensity ) {
 
-    var directionalLight = new THREE.DirectionalLight( color, intensity );
-    directionalLight.position.set( x, y, z )
-    scene.add( directionalLight );
+    light_directional = new THREE.DirectionalLight( color, intensity );
+    light_directional.position.set( x, y, z )
+    scene.add( light_directional );
 
-    directionalLight.castShadow = true;
-     //directionalLight.shadowCameraVisible = true;
+    light_directional.castShadow = true;
+     //light_directional.shadowCameraVisible = true;
 
     var d = 1;
-    directionalLight.shadowCameraLeft = -d;
-    directionalLight.shadowCameraRight = d;
-    directionalLight.shadowCameraTop = d;
-    directionalLight.shadowCameraBottom = -d;
+    light_directional.shadowCameraLeft = -d;
+    light_directional.shadowCameraRight = d;
+    light_directional.shadowCameraTop = d;
+    light_directional.shadowCameraBottom = -d;
 
-    directionalLight.shadowCameraNear = 1;
-    directionalLight.shadowCameraFar = 3000;
+    light_directional.shadowCameraNear = 1;
+    light_directional.shadowCameraFar = 3000;
 
-    directionalLight.shadowMapWidth = 1024;
-    directionalLight.shadowMapHeight = 1024;
+    light_directional.shadowMapWidth = 1024;
+    light_directional.shadowMapHeight = 1024;
 
-    directionalLight.shadowBias = -0.005;
-    directionalLight.shadowDarkness = 0.015;
+    light_directional.shadowBias = -0.005;
+    light_directional.shadowDarkness = 0.015;
 
 }
 
-function executecommand(command){
 
-    command = command ?  command.split() : document.getElementById('command').value.split();
-    switch(command[0]){
-        case 'test1':
-            test1();
-            break;
-        case 'test2':
-            test3();
-            break;
-        case 'clear':
-            clearscene();
-            break;
-
-        case 'square':
-            var s = new Square();
-            objectgroup.push(s);
-            scene.add(s);
-            s.initconstraints();
-
-            log('add','square',s);
-            if (selectededges.length > 0) {
-                addtoedge(s,selectededges[0]);
-            };
-            break;
-        case 'equilat':
-            var s = new Equilat();
-            objectgroup.push(s);
-            scene.add(s);
-            s.initconstraints();
-
-            log('add','equilat',s);
-            if (selectededges.length > 0) {
-                addtoedge(s,selectededges[0]);
-            };
-            
-            break;
-        case 'rightangle':
-            var s = new RightAngled();
-            objectgroup.push(s);
-            scene.add(s);
-            s.initconstraints();
-
-            log('add','rightangle',s);
-            if (selectededges.length > 0) {
-                addtoedge(s,selectededges[0]);
-            };
-            
-            break;
-        case 'connect':
-            if (selectededges.length == 2){
-                log('connectedges',selectededges[0],selectededges[1]);
-                connectedges(selectededges[0],selectededges[1]);}
-            else if (selectedcorners.length == 2) {
-                log('connectcorners',selectedcorners[0],selectedcorners[1]);
-                connectcorners(selectedcorners[0],selectedcorners[1]);}
-            break;
-        case 'nail':
-            if (transformhelper.target == undefined) return;
-            nail(transformhelper.target);
-            log('nail',transformhelper.target);
-            break;
-        case 'disconnect':
-            if (selectedcorners.length == 1 && transformhelper.target != undefined){
-                log('disconnectcorner',selectedcorners[0],transformhelper.target);
-                disconnectcorners(selectedcorners[0],transformhelper.target);
-            }
-            else if (selectededges.length == 1 && transformhelper.target != undefined){
-                log('disconnectedge',selectededges[0],transformhelper.target);
-                disconnectedges(selectededges[0],transformhelper.target);
-            }
-            break;
-    }
-}
 
 
 

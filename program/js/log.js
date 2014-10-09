@@ -59,23 +59,6 @@ function poplog(){
     
 }
 
-function getindexforelement(element){
-    for (var i = objectgroup.length - 1; i >= 0; i--) {
-        if (objectgroup[i] == element)return i;
-    };
-}
-
-function getindexforedge(element,edge){
-    for (var i = element.edges.length - 1; i >= 0; i--) {
-        if (element.edges[i] == edge)return i;
-    };
-}
-
-function getindexforcorner(element,corner){
-    for (var i = element.corners.length - 1; i >= 0; i--) {
-        if (element.corners[i] == corner)return i;
-    };
-}
 
 function savelog(){
 
@@ -88,9 +71,9 @@ function savelog(){
     saveAs(blob, "mylog.txt");
 }
 
-function loadlog(){
+function loadlog(parsed){
     loadingmap = {};
-    var parsed = JSON.parse(serialized);
+    if (parsed == undefined)parsed = JSON.parse(serialized);
     for (var i = parsed.length - 1; i >= 0; i--) {
         var o = parsed[i];
         var s = undefined;

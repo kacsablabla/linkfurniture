@@ -73,6 +73,19 @@ function disconnectedges(a,b){
 
 function addtoedge(element,edge){
 
+    updatematrices(element.edges[0]);
+    var inverse = new THREE.Matrix4();
+    inverse.getInverse(element.edges[0].matrixWorld);
+    element.applyMatrix(inverse);
+
+    //return;
+    element.applyMatrix(edge.matrixWorld.clone());
+    updatematrices(element);
+    element.__dirtyPosition = true;
+    element.__dirtyRotation = true;
+    connectedges(element.edges[0],edge);
+/*
+
     transformhelper.detach();
     var pos = edge.position.clone();
     edge.parent.localToWorld(pos);
@@ -84,6 +97,7 @@ function addtoedge(element,edge){
     element.__dirtyPosition = true;
     element.__dirtyRotation = true;
     connectedges(element.edges[0],edge);
+*/
 }
 
 function nail(mymesh){
@@ -126,14 +140,14 @@ function physicsautooff(){
     
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i]
-        if (obj instanceof Square){
+        if (obj instanceof Square|| obj instanceof Equilat){
 
              
             var linear = obj.getLinearVelocity();
-            obj.setLinearVelocity(linear.multiplyScalar(0.82));
+            obj.setLinearVelocity(linear.multiplyScalar(0.89));
 
             var angular = obj.getAngularVelocity();
-            obj.setAngularVelocity(angular.multiplyScalar(0.82));
+            obj.setAngularVelocity(angular.multiplyScalar(0.89));
 
             if (shouldstopphysics == true) {
                 if (linear.length()>1 || angular.length()>1) shouldstopphysics = false;
