@@ -29,7 +29,7 @@ var elementmaterial = new THREE.MeshLambertMaterial({
 
 function loadmeshes(){
     var loader = new THREE.STLLoader();
-    loader.load( 'models/square/square.stl', function ( geometry ) {
+    loader.load( 'models/square/element.stl', function ( geometry ) {
         squaregeom = geometry;
         assignUVs(squaregeom);
     } );
@@ -218,13 +218,14 @@ Edge = function(c1,c2,parent) {
     pos.divideScalar(2);
     this.position.copy(pos);
 
+    var angle = (new THREE.Vector3(0,1,0)).angleTo(c1.position.clone().sub(c2.position));
+    this.rotation.z = angle;
+
     this.othercorner = function(corner){
         if (this.corners[0] == corner)return this.corners[1];
         return this.corners[0];
     }
-    this.log = function() {
-        console.log('edge');
-    };
+
 
     this.addToCorners = function(c1,c2,face){
 
@@ -300,6 +301,7 @@ Corner = function(parent) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
 
+    this.realconnector = undefined;
     this.selected = false;
     this.transformable = false;
     this.connector = undefined;
@@ -355,242 +357,7 @@ Corner = function(parent) {
     }
 
 };
-
-
 Corner.prototype = Object.create(THREE.Mesh.prototype);
-
-
-Square = function() {
-
-    this.geometry = squaregeom;
-    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial,mass);
-
-    this.castShadow = true;
-    this.receiveShadow = true;
-    this.position.set( 0, 0, 0 );
-    this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
-
-    this.selected = false;
-    this.transformable = true; 
-    
-    this.corners = [];
-    this.edges = [];
-    
-    this.getdefaultcolor = function(){
-        if (this.mass == 0) {return color_nailed}
-        else return color_default;
-    }
-    this.log = function() {
-        console.log('square');
-    }
-
-    this.initconstraints = function(){
-        var c1 = this.addcorner('1');
-        var c2 = this.addcorner('2');
-        var c3 = this.addcorner('3');
-        var c4 = this.addcorner('4');
-
-        
-        var e1 = new Edge(c1,c2,this);
-        var e2 = new Edge(c2,c3,this);
-        var e3 = new Edge(c3,c4,this);
-        var e4 = new Edge(c4,c1,this);
-
-        e1.rotation.z =Math.PI/2;   
-        e3.rotation.z =Math.PI/2;
-
-        this.add(e1);
-        this.add(e2);
-        this.add(e3);
-        this.add(e4);
-
-
-        this.edges.push(e1);
-        this.edges.push(e2);
-        this.edges.push(e3);
-        this.edges.push(e4);
-
-    }
-
-    this.addcorner = function(name){
-        var centerpos = new THREE.Vector3(0,0,0);
-        centerpos.copy(this.center);
-        v1 = new THREE.Vector3(-edgelength/2-offset,edgelength/2+offset,0),
-        v2 = new THREE.Vector3(edgelength/2+offset,edgelength/2+offset,0);
-        c = new Corner(this)
-        switch(name){
-            case '1':
-                centerpos.add(v1)
-                break;
-            case '2':
-                centerpos.add(v2);
-                break;
-            case '3':
-                centerpos.sub(v1);
-                break;
-            case '4':
-                centerpos.sub(v2);
-                break;
-        }
-        c.position.set(centerpos.x,centerpos.y,centerpos.z);
-        this.corners.push(c);
-        this.add(c);
-        return c;
-    }
-    this.getselectededge = function(){
-        for (var i = selectededges.length - 1; i >= 0; i--) {
-            var edge = getindexforedge(this,selectededges[i]);
-            if (edge != undefined){
-                return selectededges[i];
-            }
-        };
-        return this.edges[0];
-    }
-
-
-    this.toJSON = function(){
-        return {
-            'type':'Square',
-            'edges':JSON.stringify(this.edges),
-            'corners':JSON.stringify(this.corners), 
-            'matrixWorld':JSON.stringify(this.matrixWorld)
-        }
-    };
-    this.parsejson = function(jsn){
-        loadingmap[jsn['id']]= this;
-        var edges = JSON.parse(jsn['edges']);
-        var corners = JSON.parse(jsn['corners']);
-        for (var i = 0; i < corners.length; i++) {
-            var c = new Corner(this);
-            this.corners.push(c)
-            this.add(c);
-            c.parsejson(corners[i]);
-        };
-        
-        for (var i = 0; i < edges.length ; i++) {
-            var e = new Edge(this.corners[i],this.corners[(i+1)%corners.length],this);
-            this.edges.push(e)
-            this.add(e);
-            e.parsejson(edges[i]);
-        };
-        this.applyMatrix (JSON.parse(jsn['matrixWorld']));
-        updatematrices(this);
-    }
-
-
-};
-Square.prototype = Object.create(Physijs.ConvexMesh.prototype);
-
-RightAngled = function() {
-        
-    this.geometry = rectgeom; 
-    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial,mass);
-    this.position.set( 0, 0, 0 );
-    this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
-
-    this.selected = false;
-    this.transformable = true; 
-    
-    this.corners = [];
-    this.edges = [];
-    
-    this.getdefaultcolor = function(){
-        if (this.mass == 0) {return color_nailed}
-        else return color_default;
-    }
-    this.log = function() {
-        console.log('right');
-    }
-
-    this.initconstraints = function(){
-        var c1 = this.addcorner('1');
-        var c2 = this.addcorner('2');
-        var c3 = this.addcorner('3');
-
-        
-        var e1 = new Edge(c1,c2,this,Math.sqrt(2)*edgelength);
-        var e2 = new Edge(c2,c3,this);
-        var e3 = new Edge(c3,c1,this);
-
-        e1.rotation.z =Math.PI/4;   
-        e2.rotation.z =Math.PI/2;
-        
-
-        this.add(e1);
-        this.add(e2);
-        this.add(e3);
-        //this.add(e4);
-
-
-        this.edges.push(e1);
-        this.edges.push(e2);
-        this.edges.push(e3);
-
-    }
-
-    this.addcorner = function(name){
-        var centerpos = new THREE.Vector3(0,0,0);
-        centerpos.copy(this.center);
-        v1 = new THREE.Vector3(-edgelength/2-offset,edgelength/2+offset,0),
-        v2 = new THREE.Vector3(edgelength/2+offset,edgelength/2+offset,0);
-        c = new Corner(this)
-        switch(name){
-            case '1':
-                centerpos.add(v1)
-                break;
-            case '2':
-                centerpos.sub(v1);
-                break;
-            case '3':
-                centerpos.sub(v2);
-                break;
-        }
-        c.position.set(centerpos.x,centerpos.y,centerpos.z);
-        this.corners.push(c);
-        this.add(c);
-        return c;
-    }
-    this.getselectededge = function(){
-        for (var i = selectededges.length - 1; i >= 0; i--) {
-            var edge = getindexforedge(this,selectededges[i]);
-            if (edge != undefined){
-                return selectededges[i];
-            }
-        };
-        return this.edges[0];
-    }
-    this.toJSON = function(){
-        return {
-            'type':'RightAngled',
-            'edges':JSON.stringify(this.edges),
-            'corners':JSON.stringify(this.corners), 
-            'matrixWorld':JSON.stringify(this.matrixWorld)
-        }
-    };
-    this.parsejson = function(jsn){
-        loadingmap[jsn['id']]= this;
-        var edges = JSON.parse(jsn['edges']);
-        var corners = JSON.parse(jsn['corners']);
-        for (var i = 0; i < corners.length; i++) {
-            var c = new Corner(this);
-            this.corners.push(c)
-            this.add(c);
-            c.parsejson(corners[i]);
-        };
-        
-        for (var i = 0; i < edges.length ; i++) {
-            var e = new Edge(this.corners[i],this.corners[(i+1)%corners.length],this);
-            this.edges.push(e)
-            this.add(e);
-            e.parsejson(edges[i]);
-        };
-        this.applyMatrix (JSON.parse(jsn['matrixWorld']));
-        updatematrices(this);
-    }
-
-};
-RightAngled.prototype = Object.create(Physijs.ConvexMesh.prototype);
-
 
 Element = function(geometry){
 
@@ -600,6 +367,29 @@ Element = function(geometry){
     this.edges = [];
 
     Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),500);
+
+    this.initconstraints = function(){
+
+        for (var i = 0; i < this.cornerpositions.length; i++) {
+            this.addcorner(this.cornerpositions[i]);
+        };
+        for (var i = 0; i < this.corners.length; i++) {
+            var e;
+            if (i == this.corners.length-1) e = new Edge(this.corners[i],this.corners[0],this);
+            else e = new Edge(this.corners[i],this.corners[i+1],this);
+            this.add(e);
+            this.edges.push(e);
+        };
+        this.addconnectors();
+
+    }
+    this.addcorner = function(p){
+        c = new Corner(this);
+        c.position.set(p.x,p.y,p.z);
+        this.corners.push(c);
+        this.add(c);
+        return c;
+    }
 
     this.getdefaultcolor = function(){
         if (this.mass == 0) {return color_nailed}
@@ -615,6 +405,7 @@ Element = function(geometry){
         return this.edges[0];
     }
     this.parsejson = function(jsn){
+
         loadingmap[jsn['id']]= this;
         var edges = JSON.parse(jsn['edges']);
         var corners = JSON.parse(jsn['corners']);
@@ -637,56 +428,47 @@ Element = function(geometry){
 }
 Element.prototype = Object.create(Physijs.ConvexMesh.prototype);
 
-Equilat = function() {
-        
-    this.geometry = equigeom; 
-    //Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),500);
-    //this.position.set( 0, 0, 0 );
+Square = function() {
+
+    this.cornerpositions = [
+        new THREE.Vector3(-6.5,-6.5,0),
+        new THREE.Vector3(-6.5,516.5,0),
+        new THREE.Vector3(516.5,516.5,0),
+        new THREE.Vector3(516.5,-6.5,0)
+    ];
+    this.geometry = squaregeom;
     Element.call(this,this.geometry);
 
-    //this.center = new THREE.Vector3(edgelength/2,edgelength/2,cornerradius)
-    
-    this.initconstraints = function(){
-        var c1 = this.addcorner('1');
-        var c2 = this.addcorner('2');
-        var c3 = this.addcorner('3');
-        
-        var e1 = new Edge(c1,c2,this);
-        var e2 = new Edge(c2,c3,this);
-        var e3 = new Edge(c3,c1,this);
+    this.addconnectors = function(){
+        addrealconnectors(this,1);
+    };
 
-        e1.rotation.z -=Math.PI/6;   
-        e2.rotation.z =Math.PI/6;
-        e3.rotation.z = Math.PI/2;
-        
-        this.add(e1);
-        this.add(e2);
-        this.add(e3);
-
-        this.edges.push(e1);
-        this.edges.push(e2);
-        this.edges.push(e3);
-
-    }
-
-    this.addcorner = function(name){
-        c = new Corner(this)
-        switch(name){
-            case '1':
-                c.position.set(-88.76,-6.5,0);
-                break;
-            case '2':
-                c.position.set(177.5,454.67,0);
-                break;
-            case '3':
-                c.position.set(443.76,-6.5,0);
-                break;
-        }        this.corners.push(c);
-        this.add(c);
-        return c;
-    }
     this.toJSON = function(){
-        //return this.id;
+        return {
+            'type':'Square',
+            'edges':JSON.stringify(this.edges),
+            'corners':JSON.stringify(this.corners), 
+            'matrixWorld':JSON.stringify(this.matrixWorld)
+        }
+    }
+};
+Square.prototype = Object.create(Element.prototype);
+
+Equilat = function() {
+    
+    this.cornerpositions = [
+        new THREE.Vector3(-11.26,-6.5,0),
+        new THREE.Vector3(250.24,446.43,0),
+        new THREE.Vector3(511.74,-6.5,0)
+    ];
+    this.geometry = equigeom; 
+    Element.call(this,this.geometry);
+    
+    this.addconnectors = function(){
+        addrealconnectors(this,2);
+    };
+
+    this.toJSON = function(){
         return {
             'type':'Equilat',
             'edges':JSON.stringify(this.edges),
@@ -695,10 +477,33 @@ Equilat = function() {
         }
     };
 };
+Equilat.prototype = Object.create(Element.prototype);
 
+RightAngled = function() {
+    
+    this.cornerpositions = [
+        new THREE.Vector3(-6.5,-6.5,0),
+        new THREE.Vector3(-6.5,516.5,0),
+        new THREE.Vector3(516.5,-6.5,0)
+    ];
+    this.geometry = rectgeom; 
+    Element.call(this,this.geometry);
 
-Equilat.prototype = Object.create(Element.prototype);//Object.create(Physijs.ConvexMesh.prototype);
+    this.addconnectors = function(){
+        addrealconnectors(this,3);
+    };
 
+    this.toJSON = function(){
+        return {
+            'type':'RightAngled',
+            'edges':JSON.stringify(this.edges),
+            'corners':JSON.stringify(this.corners), 
+            'matrixWorld':JSON.stringify(this.matrixWorld)
+        }
+    };
+
+};
+RightAngled.prototype = Object.create(Element.prototype);
 
 
 Table = function(){
@@ -709,7 +514,6 @@ Table = function(){
                 map:tabletexture,
                 side:THREE.FrontSide
     });
-
     
     var geometry = new THREE.PlaneGeometry(20000,20000,5,5);
 
@@ -810,7 +614,6 @@ function updatematrices(element){
 }
 
 function hideedges(){
-    console.log('hideedges');
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i];
         if (obj instanceof CornerConnector) obj.visible = false;
@@ -823,12 +626,12 @@ function hideedges(){
             };
             for (var j = obj.corners.length - 1; j >= 0; j--) {
                 obj.corners[j].visible = false;
+                obj.corners[j].realconnector.visible = true;
             };
         };
     };
 }
 function showedges(){
-    console.log('showedges');
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i];
         if (obj instanceof CornerConnector) obj.visible = true;
@@ -840,6 +643,7 @@ function showedges(){
             };
             for (var j = obj.corners.length - 1; j >= 0; j--) {
                 if (obj.corners[j].connector == undefined) obj.corners[j].visible = true;
+                obj.corners[j].realconnector.visible = false;
             };
         };
     };

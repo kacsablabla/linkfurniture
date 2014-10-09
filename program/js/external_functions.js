@@ -53,8 +53,13 @@ function connectedges(a,b){
     var b1 = b.corners[0];
     var b2 = b.corners[1];
 
-    var normaldist = a1.position.distanceToSquared(b1.position)+a2.position.distanceToSquared(b2.position);
-    var crossdist = a1.position.distanceToSquared(b2.position)+a2.position.distanceToSquared(b1.position);
+    var a1pos = a.parent.localToWorld(a1.position.clone());
+    var a2pos = a.parent.localToWorld(a2.position.clone());
+    var b1pos = b.parent.localToWorld(b1.position.clone());
+    var b2pos = b.parent.localToWorld(b2.position.clone());
+
+    var normaldist = a1pos.distanceToSquared(b1pos)+a2pos.distanceToSquared(b2pos);
+    var crossdist = a1pos.distanceToSquared(b2pos)+a2pos.distanceToSquared(b1pos);
     if (crossdist<normaldist) {var temp = b1; b1 = b2; b2 = temp;};
 
     connectcorners(a1,b1);
@@ -84,20 +89,7 @@ function addtoedge(element,edge){
     element.__dirtyPosition = true;
     element.__dirtyRotation = true;
     connectedges(element.edges[0],edge);
-/*
 
-    transformhelper.detach();
-    var pos = edge.position.clone();
-    edge.parent.localToWorld(pos);
-    element.position.set(pos.x,pos.y,pos.z);
-    element.matrixAutoUpdate = false;
-    element.updateMatrix();
-    element.updateMatrixWorld();
-    element.matrixAutoUpdate = true;
-    element.__dirtyPosition = true;
-    element.__dirtyRotation = true;
-    connectedges(element.edges[0],edge);
-*/
 }
 
 function nail(mymesh){
@@ -140,7 +132,7 @@ function physicsautooff(){
     
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i]
-        if (obj instanceof Square|| obj instanceof Equilat){
+        if (obj instanceof Element){
 
              
             var linear = obj.getLinearVelocity();
