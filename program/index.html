@@ -32,29 +32,32 @@
 			<button id="parasztvakitas" onclick="peasantblinding()">parasztvakitas</button>
 			<button id="connectoradd" onclick="createconnectormesh()">connectoradd</button>
 		</div>
-		<canvas id="viewer" tabindex='1'>
+		<div id="container">
+			<!--canvas id="viewer" tabindex='1'-->
 
-			<script type="text/javascript" src="js/command_dispatcher.js"></script>
-			<script type="text/javascript" src="js/log.js"></script>
-			<script type="text/javascript" src="js/three.min.js"></script>
-			<script type="text/javascript" src="js/physi.js"></script>
-	        <script type="text/javascript" src="js/STLLoader.js"></script>
-	        <script type="text/javascript" src="js/external_functions.js"></script>
-	        <script type="text/javascript" src="js/objects.js"></script>
-	        <script type="text/javascript" src="js/geometry.js"></script>
-	        <script type="text/javascript" src="js/tests.js"></script>
-	        <script type="text/javascript" src="js/connectors_utility.js"></script>
-	        <script type="text/javascript" src="js/OrbitControls.js"></script>
-	        <script type="text/javascript" src="js/TransformControls.js"></script>
-	        	
-			<script>
-				'use strict';
+				<script type="text/javascript" src="js/stats.min.js"></script>
+				<script type="text/javascript" src="js/command_dispatcher.js"></script>
+				<script type="text/javascript" src="js/log.js"></script>
+				<script type="text/javascript" src="js/three.min.js"></script>
+				<script type="text/javascript" src="js/physi.js"></script>
+		        <script type="text/javascript" src="js/STLLoader.js"></script>
+		        <script type="text/javascript" src="js/external_functions.js"></script>
+		        <script type="text/javascript" src="js/objects.js"></script>
+		        <script type="text/javascript" src="js/geometry.js"></script>
+		        <script type="text/javascript" src="js/tests.js"></script>
+		        <script type="text/javascript" src="js/connectors_utility.js"></script>
+		        <script type="text/javascript" src="js/OrbitControls.js"></script>
+		        <script type="text/javascript" src="js/TransformControls.js"></script>
+		        	
+				<script>
+					'use strict';
 
-			    Physijs.scripts.worker = 'js/physijs_worker.js';
-			    Physijs.scripts.ammo = 'js/ammo.js';
-				main_init();
-	        </script>
-	    </canvas>
+				    Physijs.scripts.worker = 'js/physijs_worker.js';
+				    Physijs.scripts.ammo = 'js/ammo.js';
+					main_init();
+		        </script>
+		    <!--/canvas-->
+		</div>
 
 	</body>
 </html>

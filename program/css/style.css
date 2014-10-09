@@ -60,6 +60,14 @@ h2 {
 	height: 100%;
 	border: 0px;
 }
+#container {
+	position: absolute;
+	left: 310px;
+	width: -webkit-calc(100% - 310px); /* Safari */
+	width: calc(100% - 310px);
+	height: 100%;
+	border: 0px;
+}
 
 #button {
 	position: fixed;

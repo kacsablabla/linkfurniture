@@ -28,14 +28,24 @@ var helpervisibility = true;
 var light_ambient;
 var light_spot;
 var light_directional;
-
+var container = document.getElementById( "container" );
 var transformhelper = new TransformHelper();
 scene.add(transformhelper);
 
 
 function main_init() {
-    renderer = new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
-    renderer.setSize( window.innerWidth, window.innerHeight );
+
+    
+    //Stats
+    var stats = new Stats();
+    stats.domElement.style.position = 'absolute';
+    stats.domElement.style.top = '0px';
+    //stats.domElement.style.left = '400px';
+    container.appendChild( stats.domElement );
+
+    renderer = new THREE.WebGLRenderer( { antialias: true} );
+    container.appendChild(renderer.domElement);
+    //renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.shadowMapEnabled = true;
     renderer.shadowMapType = THREE.PCFSoftShadowMap;
 
@@ -92,10 +102,21 @@ function main_init() {
     
     orbitcontrol = new THREE.OrbitControls( camera );
     orbitcontrol.addEventListener( 'change', update );
-    canvas.addEventListener( 'mousedown', onDocumentMouseDown, false );
-    canvas.addEventListener( 'mouseup', onDocumentMouseUp, false );
-    canvas.addEventListener( 'mousemove', onDocumentMouseMove, false );
-    canvas.addEventListener( 'click', onDocumentMouseClick, false );
+    container.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    container.addEventListener( 'mouseup', onDocumentMouseUp, false );
+    container.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    container.addEventListener( 'click', onDocumentMouseClick, false );
+    window.addEventListener( 'resize', onWindowResize, false );
+
+    onWindowResize();
+
+    function onWindowResize( event ) {
+
+        camera.aspect = container.offsetWidth / container.offsetHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( container.offsetWidth, container.offsetHeight );
+
+    }
     
     scene.add( new THREE.GridHelper( boxsize/2, edgelength ) );
 
@@ -103,7 +124,7 @@ function main_init() {
 
     transformcontrol.addEventListener( 'change', render );
 
-    canvas.addEventListener( 'keydown', function ( event ) {
+    container.addEventListener( 'keydown', function ( event ) {
         
         switch ( event.keyCode ) {
           case 81: // Q
@@ -141,6 +162,7 @@ function main_init() {
         requestAnimationFrame( animate );
 
         render();
+        stats.update();
 
     }
     function render() {
@@ -235,7 +257,7 @@ function onDocumentMouseClick(){
 }
 
 function onDocumentMouseDown( event ) {
-    canvas.focus();
+    container.focus();
     event.preventDefault();
     mousedown = true;
     mousedragging = false;
@@ -257,10 +279,10 @@ function onDocumentMouseMove( event ) {
     }
     else selectmousetarget();
     mousemoved = true;
-
-    var rect = canvas.getBoundingClientRect();
-    mouse.x = ( (event.clientX-rect.left)/ window.innerWidth ) * 2 - 1;
-    mouse.y = - ( (event.clientY-rect.top) / window.innerHeight ) * 2 + 1;
+    //container.offsetWidth, container.offsetHeight
+    var rect = container.getBoundingClientRect();
+    mouse.x = ( (event.clientX-rect.left)/ container.offsetWidth ) * 2 - 1;
+    mouse.y = - ( (event.clientY-rect.top) / container.offsetHeight ) * 2 + 1;
 
 }
 
