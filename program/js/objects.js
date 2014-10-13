@@ -6,7 +6,7 @@ var unitZ = new THREE.Vector3( 0, 0, 1 );
 var color_default = 0xffffff;
 var color_hovered = 0x008888;
 var color_selected = 0xff0000;
-var color_nailed = 0xbbbbbb;
+var color_nailed = 0xfcd6a9;
 var color_default_connector = 0x888888;
 
 var elementmass = 500;
@@ -20,7 +20,7 @@ var rectgeom;
 
 var elementmaterial = new THREE.MeshLambertMaterial({
     color:color_default,
-    specular: color_default,
+    ambient: color_default,
     bumpMap: 0,
     map:texture,
     side:THREE.FrontSide
@@ -155,6 +155,10 @@ CornerConnector = function(){
         if (index <0) return;
         this.corners.splice(index,1);
         delete this.constraints[corner.id];
+        if (this.corners.length == 0) {
+            objectgroup.splice(objectgroup.indexOf(this),1);
+            scene.remove(this);
+        };
         return true;
     }
 
@@ -416,7 +420,7 @@ Element = function(geometry){
     }
 
     this.getdefaultcolor = function(){
-        if (this.mass == 0) {return color_nailed}
+        if (this.nailed) {return color_nailed}
         else return color_default;
     }
     this.getselectededge = function(){
@@ -555,7 +559,7 @@ RightAngled.prototype = Object.create(Element.prototype);
 
 Table = function(){
 
-    var tabletexture = new THREE.ImageUtils.loadTexture('textures/ant.jpg');//('textures/skybox/sky/bottom.jpg');
+    var tabletexture = new THREE.ImageUtils.loadTexture('textures/skybox/sky/bottom.jpg');
     //tabletexture.wrapS = THREE.MirroredRepeatWrapping;
     //tabletexture.wrapT = THREE.RepeatWrapping;
     //tabletexture.repeat.set( 14, 14 );
@@ -581,6 +585,7 @@ var hoverover = function(element) {
     if (element.selected == undefined)return;
     if (!element.selected) {
         element.material.color.set (color_hovered);
+        if (element instanceof Element) {element.material.ambient.set(color_hovered)};
     };
     
 }
@@ -588,17 +593,20 @@ var hoverout = function(element) {
     if (element.selected == undefined)return;
     if (!element.selected) {
         element.material.color.set (element.getdefaultcolor());
+        if (element instanceof Element) {element.material.ambient.set(element.getdefaultcolor())};
     };
 }
 var select = function(element) {
     if (element.selected == undefined)return;
     element.material.color.set (color_selected);
+    if (element instanceof Element) {element.material.ambient.set(color_selected)};
     element.selected = true;
 }
 var deselect = function(element) {
     if (element.selected == undefined)return;
     if (element instanceof CornerConnector) {element = element.connector_show};
     element.material.color.set (element.getdefaultcolor());
+    if (element instanceof Element) {element.material.ambient.set(element.getdefaultcolor())};
     element.selected = false;
 }
 

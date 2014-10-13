@@ -3,18 +3,15 @@
 
 var scene = new Physijs.Scene;//THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 0.1, 100000 );
-//var renderer = new THREE.WebGLRenderer();
 var renderer //= new THREE.WebGLRenderer( { antialias: true, canvas: canvas} );
 var objectgroup = [];
 var defaultmaterial = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0xAAAAAA, specular: 0x111111, shininess: 200 } );
-//scene.add(objectgroup);
 var physicssimulationcounter = 500;
 var physicssimulation = false;
 var currentIntersected,raycaster,intersectionpoint;
 var mouse = new THREE.Vector2();
 var orbitcontrol;
 var transformcontrol;
-//var controllee;
 var mousedown = false;
 var mousemoved = false;
 var mousedragging = false;
@@ -42,6 +39,7 @@ function main_init() {
     var stats = new Stats();
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.top = '0px';
+    stats.domElement.style.right = '0px';
     //stats.domElement.style.left = '400px';
     container.appendChild( stats.domElement );
     
@@ -63,7 +61,7 @@ function main_init() {
     
     // LIGHTS
 
-    light_ambient = new THREE.AmbientLight( 0x777777 );
+    light_ambient = new THREE.AmbientLight( 0x999999 );
     scene.add( light_ambient );
     addspotlight();
     addShadowedLight(1500,1500,1500,0xffffff,0.33);
@@ -74,6 +72,7 @@ function main_init() {
       'textures/skybox/sky/top.jpg',
       'textures/skybox/sky/bottom.jpg',
       'textures/skybox/sky/front.jpg',
+      //'textures/ant.jpg',
       'textures/skybox/sky/back.jpg'
     ];
 
@@ -105,10 +104,10 @@ function main_init() {
     
     orbitcontrol = new THREE.OrbitControls( camera );
     orbitcontrol.addEventListener( 'change', update );
-    container.addEventListener( 'mousedown', onDocumentMouseDown, false );
-    container.addEventListener( 'mouseup', onDocumentMouseUp, false );
-    container.addEventListener( 'mousemove', onDocumentMouseMove, false );
-    container.addEventListener( 'click', onDocumentMouseClick, false );
+    renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+    renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    renderer.domElement.addEventListener( 'click', onDocumentMouseClick, false );
     window.addEventListener( 'resize', onWindowResize, false );
 
     onWindowResize();
@@ -256,24 +255,33 @@ function onDocumentMouseClick(event){
             transformhelper.detach();
             select(currentIntersected);
             selectedelements.push(currentIntersected);
+            performfunction();
             //transformhelper.attach( currentIntersected);
             //orbitcontrol.enabled = false; 
         }
         else{
             select(currentIntersected);
             transformhelper.detach();
-            if (currentIntersected instanceof Edge) selectededges.push(currentIntersected);
+            if (currentIntersected instanceof Edge){
+                selectededges.push(currentIntersected);
+                performfunction();
+            } 
             else if (currentIntersected instanceof Corner ||
-             currentIntersected instanceof CornerConnector) selectedcorners.push(currentIntersected);
-            if (currentIntersected instanceof Visualizer) selectedcorners.push(currentIntersected.parent);
+             currentIntersected instanceof CornerConnector){
+                selectedcorners.push(currentIntersected);
+                performfunction();
+            } 
+            if (currentIntersected instanceof Visualizer) {
+                selectedcorners.push(currentIntersected.parent);
+                performfunction();
             }
-        ;
+        };
     };
     
 }
 
 function onDocumentMouseDown( event ) {
-    if (event.button !=0) return;
+    if (event.button !=0 ) return;
     container.focus();
     event.preventDefault();
     mousedown = true;
@@ -334,7 +342,7 @@ function onDocumentMouseDown( event ) {
     
 }
 function onDocumentMouseUp( event ) {
-    
+
     if (event.button !=0) return;
     event.preventDefault();
     mousedown = false;
@@ -343,7 +351,7 @@ function onDocumentMouseUp( event ) {
 }
 
 function onDocumentMouseMove( event ) {
-    
+
     if (event.button !=0) return;
     event.preventDefault();
     if (mousedown) {

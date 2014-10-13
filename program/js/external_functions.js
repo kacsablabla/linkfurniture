@@ -30,23 +30,25 @@ function deselectall(){
 }
 
 function connectcorners(a,b){
-    if (a.parent == b.parent) return;
+    if (a.parent == b.parent) return false;
     transformhelper.detach();
-    deselectall();
+    //deselectall();
     var connectora = a.getconnector();
-    console.log('connectora position: '+connectora.position);
+    //console.log('connectora position: '+connectora.position);
     var connectorb = b.getconnector();
-    console.log('connectorb position: '+connectorb.position);
-    if (connectora == connectorb) return;
+    //console.log('connectorb position: '+connectorb.position);
+    if (connectora == connectorb) return false;
     connectora.mergeWithConnector(connectorb);
     console.log('merged position: '+connectorb.position);
-    physicson();
+    return true;
+    //physicson();
 }
 
 function disconnectcorners(corner,face){
+    if (corner.connector == undefined) return false;
     transformhelper.detach();
-    deselectall();
-    physicson()
+    //deselectall();
+    //physicson()
    var connector = corner.getconnector();
    var corner
    for (var i = connector.corners.length - 1; i >= 0; i--) {
@@ -56,14 +58,14 @@ function disconnectcorners(corner,face){
         }
    };
    if (connector.removecorner(corner)) corner.visible = true;
-    
+    return corner.visible;
    
 }
 
 function connectedges(a,b){
-    if (a.parent == b.parent) return;
+    if (a.parent == b.parent) return false;
     transformhelper.detach();
-    deselectall();
+    //deselectall();
     var a1 = a.corners[0];
     var a2 = a.corners[1];
     var b1 = b.corners[0];
@@ -78,19 +80,22 @@ function connectedges(a,b){
     var crossdist = a1pos.distanceToSquared(b2pos)+a2pos.distanceToSquared(b1pos);
     if (crossdist<normaldist) {var temp = b1; b1 = b2; b2 = temp;};
 
-    connectcorners(a1,b1);
-    connectcorners(a2,b2);
+    var s1 = connectcorners(a1,b1);
+    var s2 = connectcorners(a2,b2);
+    return(s1||s2);
     //physicson();
 }
 function disconnectedges(a,b){
     transformhelper.detach();
-    deselectall();
+
+    //deselectall();
     //physicson()
   var a1 = a.corners[0];
   var a2 = a.corners[1];
 
-  disconnectcorners(a1,b);
-  disconnectcorners(a2,b);
+  var s1 = disconnectcorners(a1,b);
+  var s2 = disconnectcorners(a2,b);
+  return(s1||s2);
 }
 
 function addtoedge(element,edge){
@@ -111,7 +116,7 @@ function addtoedge(element,edge){
 function removeelement(element){
     deselectall();
     for (var i = element.corners.length - 1; i >= 0; i--) {
-        disconnectedges(element.corners[i],element);
+        disconnectcorners(element.corners[i],element);
     };
     for (var i = element.corners.length - 1; i >= 0; i--) {
         var c = element.corners[i];
@@ -128,12 +133,12 @@ function removeelement(element){
             connector.corners = [];
             // 
             objectgroup.splice(objectgroup.indexOf(connector),1);
-            scene.remove(otherconnector);
+            scene.remove(connector);
         };
 
     };
-
-    scne.remove(element);
+    objectgroup.splice(objectgroup.indexOf(element),1);
+    scene.remove(element);
 }
 function nail(mymesh){
     mymesh.nailed = !mymesh.nailed;
