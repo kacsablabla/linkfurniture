@@ -330,7 +330,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 		if ( scope.enabled === false ) return;
 		event.preventDefault();
 
-		if ( event.button === 0 ) {
+		if ( event.button === 1 ) {
 			if ( scope.noRotate === true ) return;
 
 			state = STATE.ROTATE;
@@ -352,7 +352,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 			panStart.set( event.clientX, event.clientY );
 
 		}
-
+		
 		document.addEventListener( 'mousemove', onMouseMove, false );
 		document.addEventListener( 'mouseup', onMouseUp, false );
 		scope.dispatchEvent( startEvent );
@@ -637,7 +637,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 	this.domElement.addEventListener( 'touchend', touchend, false );
 	this.domElement.addEventListener( 'touchmove', touchmove, false );
 
-	window.addEventListener( 'keydown', onKeyDown, false );
+	container.addEventListener( 'keydown', onKeyDown, false );
 
 	// force an update at start
 	this.update();

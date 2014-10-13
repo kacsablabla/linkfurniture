@@ -10,7 +10,7 @@ var defaultmaterial = new THREE.MeshPhongMaterial( { ambient: 0x555555, color: 0
 //scene.add(objectgroup);
 var physicssimulationcounter = 500;
 var physicssimulation = false;
-var currentIntersected,raycaster;
+var currentIntersected,raycaster,intersectionpoint;
 var mouse = new THREE.Vector2();
 var orbitcontrol;
 var transformcontrol;
@@ -20,6 +20,7 @@ var mousemoved = false;
 var mousedragging = false;
 var selectededges = [];
 var selectedcorners = [];
+var selectedelements = [];
 var canvas = document.getElementById('viewer');
 var gravity = new THREE.Vector3( 0, 0, 0 );
 var scale = 0.01;
@@ -30,6 +31,7 @@ var light_spot;
 var light_directional;
 var container = document.getElementById( "container" );
 var transformhelper = new TransformHelper();
+var transformtype ; // 0:translate, 1:rotate
 scene.add(transformhelper);
 
 
@@ -42,6 +44,7 @@ function main_init() {
     stats.domElement.style.top = '0px';
     //stats.domElement.style.left = '400px';
     container.appendChild( stats.domElement );
+    
 
     renderer = new THREE.WebGLRenderer( { antialias: true} );
     container.appendChild(renderer.domElement);
@@ -128,20 +131,28 @@ function main_init() {
         
         switch ( event.keyCode ) {
           case 81: // Q
-            transformcontrol.setSpace( transformcontrol.space == "local" ? "world" : "local" );
+            //transformcontrol.setSpace( transformcontrol.space == "local" ? "world" : "local" );
             break;
           case 87: // W
+            transformtype = 0;
+            return;
             transformcontrol.setMode( "translate" );
             break;
           case 69: // E
+            transformtype = 1;
+            return;
             transformcontrol.setMode( "rotate" );
             break;
-          case 70: // E
+          case 70: // F
             transformhelper.detach( );
             orbitcontrol.enabled = true;
             break;
+          case 84: // E
+            transformtype = 0;
+            break;
           case 82: // R
-            transformcontrol.setMode( "scale" );
+            transformtype = 1;
+            //transformcontrol.setMode( "scale" );
             break;
         case 187:
         case 107: // +,=,num+
@@ -206,6 +217,7 @@ function selectmousetarget(){
         if (intersects[i].object.visible){
 
             closestintersection = intersects[i].object;
+            intersectionpoint = intersects[i];
             break;
         }
     };
@@ -231,25 +243,29 @@ function selectmousetarget(){
     }
 };
 
-function onDocumentMouseClick(){
+function onDocumentMouseClick(event){
+    if (event.button !=0) return;
     if (!mousemoved) {
         if (currentIntersected == undefined) {
-            deselectcorners();
-            deselectedges();
+            deselectall();
             transformhelper.detach();
             orbitcontrol.enabled = true;
         }
         else if (currentIntersected.transformable) {
             physicssimulation = false;
-            transformhelper.attach( currentIntersected);
-            orbitcontrol.enabled = false; 
+            transformhelper.detach();
+            select(currentIntersected);
+            selectedelements.push(currentIntersected);
+            //transformhelper.attach( currentIntersected);
+            //orbitcontrol.enabled = false; 
         }
         else{
             select(currentIntersected);
+            transformhelper.detach();
             if (currentIntersected instanceof Edge) selectededges.push(currentIntersected);
             else if (currentIntersected instanceof Corner ||
              currentIntersected instanceof CornerConnector) selectedcorners.push(currentIntersected);
-            
+            if (currentIntersected instanceof Visualizer) selectedcorners.push(currentIntersected.parent);
             }
         ;
     };
@@ -257,22 +273,78 @@ function onDocumentMouseClick(){
 }
 
 function onDocumentMouseDown( event ) {
+    if (event.button !=0) return;
     container.focus();
     event.preventDefault();
     mousedown = true;
     mousedragging = false;
     mousemoved = false;
+    if (currentIntersected != undefined ) {
+
+        if (transformtype == 1) {
+
+            transformhelper.detach();
+            var intersected ;
+            if (currentIntersected instanceof Visualizer)intersected = currentIntersected.parent.corners[0];
+            if (currentIntersected instanceof Corner)intersected = currentIntersected;
+            if (currentIntersected instanceof Edge)intersected = currentIntersected;
+            if (intersected != undefined) {
+                var edge = intersected.parent.getcrossededge(intersected);
+                if (edge != undefined) {
+                    transformcontrol.setMode( "rotate" );
+                    transformhelper.attach( intersected.parent, edge);
+                    transformcontrol.pointerDownIntersect("Y",intersectionpoint);
+                };
+
+            };
+        };
+
+        if (transformtype == 0) {
+            
+            transformhelper.detach();
+            var intersected ;
+            var edge;
+            if (currentIntersected instanceof Edge){
+                intersected = currentIntersected.parent;
+                edge = currentIntersected;
+            }
+            if (currentIntersected instanceof Element) {
+                edge = currentIntersected;
+                intersected = currentIntersected;
+            };
+            if (intersected != undefined) {
+
+                transformcontrol.setMode( "translate" );
+                if (edge == intersected) {
+                    edge = intersected.edges[0];
+                    transformhelper.attach( intersected,edge);
+                    transformcontrol.pointerDownIntersect("Z",intersectionpoint);
+                }
+                else {
+                    transformhelper.attach( intersected,edge);
+                    transformcontrol.pointerDownIntersect("Y",intersectionpoint)
+                };
+                
+
+            };
+        };
+        
+        
+    };
     
 }
 function onDocumentMouseUp( event ) {
-
+    
+    if (event.button !=0) return;
     event.preventDefault();
     mousedown = false;
+    //transformhelper.detach();
     
 }
 
 function onDocumentMouseMove( event ) {
-
+    
+    if (event.button !=0) return;
     event.preventDefault();
     if (mousedown) {
         mousedragging = true;
@@ -283,6 +355,10 @@ function onDocumentMouseMove( event ) {
     var rect = container.getBoundingClientRect();
     mouse.x = ( (event.clientX-rect.left)/ container.offsetWidth ) * 2 - 1;
     mouse.y = - ( (event.clientY-rect.top) / container.offsetHeight ) * 2 + 1;
+
+    //if (mousedragging) {
+        //transformhelper.attach( currentIntersected)
+    //};
 
 }
 
@@ -329,7 +405,6 @@ function addShadowedLight( x, y, z, color, intensity ) {
     light_directional.shadowDarkness = 0.015;
 
 }
-
 
 
 

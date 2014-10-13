@@ -11,9 +11,8 @@ var color_default_connector = 0x888888;
 
 var elementmass = 500;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
-var cornerradius = 8;
-var offset = 15;
 var cornerradius_symbolic = 6.5;
+var cornerradius_show = 12;
 var edgelength = 510;
 var squaregeom;
 var equigeom;
@@ -52,7 +51,7 @@ TransformHelper = function(){
     this.geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
     
     this.material = new THREE.MeshBasicMaterial({
-        color: 0x888888, 
+        color: 0x000000, 
         side:THREE.FrontSide
     });
     THREE.Mesh.call(this,this.geometry,this.material);
@@ -99,10 +98,27 @@ TransformHelper = function(){
         this.updatetarget();
     }
 }
-
-
-
 TransformHelper.prototype = Object.create(THREE.Mesh.prototype);
+
+Visualizer = function(geometry){
+
+    this.geometry =  geometry;
+    
+    var material = new THREE.MeshBasicMaterial({
+        color: color_default_connector, 
+        transparent: true, 
+        opacity: 0.8,
+        side:THREE.FrontSide
+    });
+    THREE.Mesh.call(this,this.geometry,material);
+    this.selected = false;
+
+    this.getdefaultcolor = function(){
+        if (this.mass == 0) {return color_nailed}
+        else return color_default_connector;
+    }
+}
+Visualizer.prototype = Object.create(THREE.Mesh.prototype);
 
 CornerConnector = function(){
     
@@ -117,11 +133,14 @@ CornerConnector = function(){
 
     this.selected = false;
     this.transformable = false;
+    this.connector_show = new Visualizer(new THREE.SphereGeometry(cornerradius_show),material);
 
     this.constraints = {};
     this.corners = [];
 
     Physijs.SphereMesh.call(this,geometry,material,1);
+    this.add(this.connector_show);
+    //this.visible = false;
 
     this.addcorner = function(corner,constraint){
         this.constraints[corner.id] = constraint;
@@ -198,7 +217,7 @@ Edge = function(c1,c2,parent) {
     parent == undefined ?  this.parent = parent : this.parent = scene;
     var reallength = c1.position.distanceTo(c2.position)-2*cornerradius_symbolic;
 
-    this.geometry =  new THREE.CylinderGeometry(cornerradius_symbolic, cornerradius_symbolic, reallength, 13, 1);
+    this.geometry =  new THREE.CylinderGeometry(cornerradius_show, cornerradius_show, reallength, 13, 1);
     
     var material = new THREE.MeshBasicMaterial({
         color: color_default_connector, 
@@ -290,7 +309,7 @@ Edge.prototype = Object.create(THREE.Mesh.prototype);
 
 Corner = function(parent) {
 
-    var geometry =  new THREE.SphereGeometry( cornerradius_symbolic);
+    var geometry =  new THREE.SphereGeometry( cornerradius_show);
     
     var material = new THREE.MeshBasicMaterial({
         color: color_default_connector, 
@@ -355,7 +374,8 @@ Corner = function(parent) {
         updatematrices(this);
     }
     this.rendercallback = function(){
-        if (this.connector != undefined) this.configureconnector(this.connector);
+        if (this.connector == undefined) return;
+        this.configureconnector(this.connector);
     }
 
 };
@@ -407,6 +427,18 @@ Element = function(geometry){
             }
         };
         return this.edges[0];
+    }
+    this.getcrossededge = function(helper){
+        
+        if (this.corners.length == 4 && helper instanceof Edge) {
+            var index = getindexforedge(this,helper);
+            return this.edges[(index+2)%4];
+        }
+        if (this.corners.length == 3 && helper instanceof Corner){
+            var index = getindexforcorner(this,helper);
+            return this.edges[(index+1)%3];
+        }
+        return undefined;
     }
     this.parsejson = function(jsn){
 
@@ -523,7 +555,11 @@ RightAngled.prototype = Object.create(Element.prototype);
 
 Table = function(){
 
-    var tabletexture = new THREE.ImageUtils.loadTexture('textures/skybox/sky/bottom.jpg');
+    var tabletexture = new THREE.ImageUtils.loadTexture('textures/ant.jpg');//('textures/skybox/sky/bottom.jpg');
+    //tabletexture.wrapS = THREE.MirroredRepeatWrapping;
+    //tabletexture.wrapT = THREE.RepeatWrapping;
+    //tabletexture.repeat.set( 14, 14 );
+
     var material = new THREE.MeshBasicMaterial({
                 //color:0xffffff,
                 map:tabletexture,
@@ -561,6 +597,7 @@ var select = function(element) {
 }
 var deselect = function(element) {
     if (element.selected == undefined)return;
+    if (element instanceof CornerConnector) {element = element.connector_show};
     element.material.color.set (element.getdefaultcolor());
     element.selected = false;
 }

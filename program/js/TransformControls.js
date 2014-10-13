@@ -311,7 +311,7 @@
 			if ( axis == "XZ" ) this.activePlane = this.planes[ "XZ" ];
 
 			this.hide();
-			this.show();
+			//this.show();
 
 		};
 
@@ -385,7 +385,7 @@
 			if ( axis == "Z" ) this.activePlane = this.planes[ "XY" ];
 
 			this.hide();
-			this.show();
+			//this.show();
 
 		};
 
@@ -609,7 +609,7 @@
 		var camPosition = new THREE.Vector3();
 		var camRotation = new THREE.Euler();
 
-		domElement.addEventListener( "mousedown", onPointerDown, false );
+		//domElement.addEventListener( "mousedown", onPointerDown, false );
 		domElement.addEventListener( "touchstart", onPointerDown, false );
 
 		domElement.addEventListener( "mousemove", onPointerHover, false );
@@ -631,7 +631,7 @@
 			this.gizmo["translate"].hide();
 			this.gizmo["rotate"].hide();
 			this.gizmo["scale"].hide();
-			this.gizmo[_mode].show();
+			if (_mode != "rotate") this.gizmo[_mode].show();
 
 			scope.update();
 
@@ -759,6 +759,9 @@
 
 				if ( intersect ) {
 
+					var planeIntersect = intersectObjects( pointer, [scope.gizmo[_mode].activePlane] );
+					scope.pointerDownIntersect(intersect.object.name,planeIntersect);
+					/*
 					scope.axis = intersect.object.name;
 
 					scope.update();
@@ -779,13 +782,38 @@
 					parentScale.setFromMatrixScale( tempMatrix.getInverse( scope.object.parent.matrixWorld ) );
 
 					offset.copy( planeIntersect.point );
+					*/
 
 				}
 
 			}
 
-			_dragging = true;
+			//_dragging = true;
 
+		}
+
+		this.pointerDownIntersect = function(intersectname,planeIntersect){
+
+
+			scope.axis = intersectname;
+
+			scope.update();
+
+			eye.copy( camPosition ).sub( worldPosition ).normalize();
+
+			scope.gizmo[_mode].setActivePlane( scope.axis, eye );
+
+			oldPosition.copy( scope.object.position );
+			oldScale.copy( scope.object.scale );
+
+			oldRotationMatrix.extractRotation( scope.object.matrix );
+			worldRotationMatrix.extractRotation( scope.object.matrixWorld );
+
+			parentRotationMatrix.extractRotation( scope.object.parent.matrixWorld );
+			parentScale.setFromMatrixScale( tempMatrix.getInverse( scope.object.parent.matrixWorld ) );
+
+			offset.copy( planeIntersect.point );
+			_dragging = true;
 		}
 
 		function onPointerMove( event ) {

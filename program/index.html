@@ -2,6 +2,7 @@
 	<head>
 		<title>My first Three.js app</title>
 		<link rel="stylesheet" type="text/css" href="css/style.css">
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.0/jquery.min.js"></script>
 	</head>
 	<body>
 		<div id="panel" >
@@ -13,7 +14,8 @@
 			       name="Text1" 
 			       id="command" 
 			       value=""
-			       tabindex='1' />
+			       tabindex='1'
+			       onclick = 'this.focus()' />
 
 			<button id="execute" onclick="executecommand()">execute</button>
 			<button id="test" onclick='executecommand("test4")'>test</button>
@@ -32,7 +34,7 @@
 			<button id="parasztvakitas" onclick="peasantblinding()">parasztvakitas</button>
 			<button id="connectoradd" onclick="createconnectormesh()">connectoradd</button>
 		</div>
-		<div id="container">
+		<div id="container" tabindex="0">
 			<!--canvas id="viewer" tabindex='1'-->
 
 				<script type="text/javascript" src="js/stats.min.js"></script>

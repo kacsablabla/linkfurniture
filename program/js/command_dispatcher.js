@@ -1,3 +1,37 @@
+var selectedbutton = undefined;
+
+$(document).ready(function(){
+
+    createcontroldiv();
+    
+    
+    $("#addsquare").click( function(){
+        executecommand('square');
+    });
+});
+
+
+function createcontroldiv(){
+
+    var controlcontainer = document.createElement("div");
+    controlcontainer.style.cssText = "position:absolute;width:130px;height:200px;background-color:#0ff;top:50";
+    controlcontainer.id = "controlwrapper";
+    //controlcontainer.class = ".controlwrapper";
+    //stats.domElement.style.left = '400px';
+    
+
+    var button = document.createElement("div");
+    button.style.top = 50; 
+    button.style.left = 50; 
+    button.style.backgroundImage = 'url(../textures/button.png)';
+    button.className = "ControlButton";
+    button.id = "addsquare";
+    controlcontainer.appendChild(button);
+
+    container.appendChild(controlcontainer);
+
+}
+
 function executecommand(command){
 
     command = command ?  command.split() : document.getElementById('command').value.split();
@@ -59,8 +93,8 @@ function executecommand(command){
                 connectcorners(selectedcorners[0],selectedcorners[1]);}
             break;
         case 'nail':
-            if (transformhelper.target == undefined) return;
-            nail(transformhelper.target);
+            if (selectedelements.length == 0) return;
+            nail(selectedelements[0]);
             break;
         case 'disconnect':
             if (selectedcorners.length == 1 && transformhelper.target != undefined){

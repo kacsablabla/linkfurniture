@@ -15,10 +15,24 @@ function deselectcorners(){
     selectedcorners = [];
 }
 
+function deselectelements(){
+
+    for (var i = selectedelements.length - 1; i >= 0; i--) {
+        deselect(selectedelements[i]);
+    };
+    selectedelements = [];
+}
+
+function deselectall(){
+    deselectedges();
+    deselectcorners();
+    deselectelements();
+}
+
 function connectcorners(a,b){
     if (a.parent == b.parent) return;
     transformhelper.detach();
-    deselectcorners();
+    deselectall();
     var connectora = a.getconnector();
     console.log('connectora position: '+connectora.position);
     var connectorb = b.getconnector();
@@ -31,7 +45,7 @@ function connectcorners(a,b){
 
 function disconnectcorners(corner,face){
     transformhelper.detach();
-    deselectcorners();
+    deselectall();
     physicson()
    var connector = corner.getconnector();
    var corner
@@ -49,7 +63,7 @@ function disconnectcorners(corner,face){
 function connectedges(a,b){
     if (a.parent == b.parent) return;
     transformhelper.detach();
-    deselectedges();
+    deselectall();
     var a1 = a.corners[0];
     var a2 = a.corners[1];
     var b1 = b.corners[0];
@@ -70,8 +84,8 @@ function connectedges(a,b){
 }
 function disconnectedges(a,b){
     transformhelper.detach();
-    deselectedges();
-    physicson()
+    deselectall();
+    //physicson()
   var a1 = a.corners[0];
   var a2 = a.corners[1];
 
@@ -94,7 +108,33 @@ function addtoedge(element,edge){
     connectedges(element.edges[0],edge);
 
 }
+function removeelement(element){
+    deselectall();
+    for (var i = element.corners.length - 1; i >= 0; i--) {
+        disconnectedges(element.corners[i],element);
+    };
+    for (var i = element.corners.length - 1; i >= 0; i--) {
+        var c = element.corners[i];
+        if (c.connector != undefined) {
 
+            var connector = c.connector;
+            var corner;
+            while((corner = connector.corners.pop()) != null){
+
+                constraint = connector.constraints[corner.id];
+                scene.removeConstraint(constraint);
+            }
+            connector.constraints = {};
+            connector.corners = [];
+            // 
+            objectgroup.splice(objectgroup.indexOf(connector),1);
+            scene.remove(otherconnector);
+        };
+
+    };
+
+    scne.remove(element);
+}
 function nail(mymesh){
     mymesh.nailed = !mymesh.nailed;
     if (mymesh.nailed) mymesh.nailedMatrix = mymesh.matrixWorld.clone();
@@ -134,10 +174,11 @@ function physicsautooff(){
         var obj = objectgroup[i]
         if (obj instanceof Element){
 
-            var factor = 0.89;
-            //if (obj.nailed) {factor = 0};
+            var factor = 0.92;
+            if (obj.nailed) {factor = 0};
              
             var linear = obj.getLinearVelocity();
+            //console.log('linearvelocity: '+linear.length());
             obj.setLinearVelocity(linear.multiplyScalar(factor));
 
             var angular = obj.getAngularVelocity();
