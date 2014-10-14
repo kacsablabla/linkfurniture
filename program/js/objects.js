@@ -414,7 +414,7 @@ Element = function(geometry){
     };
     this.center.divideScalar(this.cornerpositions.length);
 
-    var spheregeometry =  new THREE.SphereGeometry( 21);
+    var spheregeometry =  new THREE.SphereGeometry( 1);
     spheregeometry.applyMatrix( new THREE.Matrix4().makeTranslation(this.center.x,this.center.y,this.center.z) );
     //Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),elementmass);
     Physijs.ConvexMesh.call(this,spheregeometry,elementmaterial.clone(),elementmass);
