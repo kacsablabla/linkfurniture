@@ -316,9 +316,9 @@ function onDocumentMouseDown( event ) {
                 intersected = currentIntersected.parent;
                 edge = currentIntersected;
             }
-            if (currentIntersected instanceof Element) {
-                edge = currentIntersected;
-                intersected = currentIntersected;
+            if (currentIntersected instanceof ElementVisualizer) {
+                edge = currentIntersected.parent;
+                intersected = currentIntersected.parent;
             };
             if (intersected != undefined) {
 
