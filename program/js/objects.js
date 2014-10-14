@@ -10,6 +10,7 @@ var color_nailed = 0xfcd6a9;
 var color_default_connector = 0x888888;
 
 var elementmass = 500;
+var elementmass_nailed = 500000;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
 var cornerradius_symbolic = 6.5;
 var cornerradius_show = 17;
@@ -251,7 +252,7 @@ Edge = function(c1,c2,parent) {
         return this.corners[0];
     }
 
-
+    /*
     this.addToCorners = function(c1,c2,face){
 
         var axis = this.getaxis();
@@ -288,6 +289,7 @@ Edge = function(c1,c2,parent) {
         console.log('position: '+position.x + ',' + position.y + ',' + position.z);
         return position;
     };
+    */
     this.getdefaultcolor = function(){
         if (this.mass == 0) {return color_nailed}
         else return color_default_connector;
@@ -366,7 +368,12 @@ Corner = function(parent) {
         connector.constraints[this.id] = constraint;
         return constraint;
     }
-
+    this.isconnectedto = function(othercorner){
+        if (this.connector == undefined) return false;
+        if (othercorner.connector == undefined) return false;
+        if (this.connector == othercorner.connector) return true;
+        return false;
+    }
     this.toJSON = function(){
         return {
             'id':this.id,
@@ -392,7 +399,7 @@ ElementVisualizer = function(geometry){
     this.selected = false;
 
     this.getdefaultcolor = function(){
-        if (this.parent.mass == 0) {return color_nailed}
+        if (this.parent.nailed) {return color_nailed}
         else return color_default;
     }
 }
@@ -492,7 +499,6 @@ Element = function(geometry){
         updatematrices(this);
     }
     this.rendercallback = function(){
-        return;
         if (!this.nailed) return;
         this.matrix = this.nailedMatrix;
         this.matrix.decompose(this.position, this.quaternion, this.scale);
@@ -703,10 +709,9 @@ function hideedges(){
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i];
         if (obj instanceof CornerConnector) obj.visible = false;
-        else {
-
-            obj.castShadow = true;
-            obj.receiveShadow = true;
+        else if (obj instanceof Element) {
+            obj.visualmesh.castShadow = true;
+            obj.visualmesh.receiveShadow = true;
             for (var j = obj.edges.length - 1; j >= 0; j--) {
                 obj.edges[j].visible = false;
             };
@@ -721,9 +726,9 @@ function showedges(){
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i];
         if (obj instanceof CornerConnector) obj.visible = true;
-        else {
-            obj.castShadow = false;
-            obj.receiveShadow = false;
+        else if (obj instanceof Element) {
+            obj.visualmesh.castShadow = false;
+            obj.visualmesh.receiveShadow = false;
             for (var j = obj.edges.length - 1; j >= 0; j--) {
                 obj.edges[j].visible = true;
             };

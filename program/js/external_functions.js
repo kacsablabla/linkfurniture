@@ -47,8 +47,6 @@ function connectcorners(a,b){
 function disconnectcorners(corner,face){
     if (corner.connector == undefined) return false;
     transformhelper.detach();
-    //deselectall();
-    //physicson()
    var connector = corner.getconnector();
    var corner
    for (var i = connector.corners.length - 1; i >= 0; i--) {
@@ -65,7 +63,6 @@ function disconnectcorners(corner,face){
 function connectedges(a,b){
     if (a.parent == b.parent) return false;
     transformhelper.detach();
-    //deselectall();
     var a1 = a.corners[0];
     var a2 = a.corners[1];
     var b1 = b.corners[0];
@@ -80,10 +77,13 @@ function connectedges(a,b){
     var crossdist = a1pos.distanceToSquared(b2pos)+a2pos.distanceToSquared(b1pos);
     if (crossdist<normaldist) {var temp = b1; b1 = b2; b2 = temp;};
 
+    if (a1.isconnectedto(b2)) {var temp = b1; b1 = b2; b2 = temp;}
+    else if (a2.isconnectedto(b1)) {
+        var temp = b1; b1 = b2; b2 = temp;
+    };
     var s1 = connectcorners(a1,b1);
     var s2 = connectcorners(a2,b2);
     return(s1||s2);
-    //physicson();
 }
 function disconnectedges(a,b){
     transformhelper.detach();
@@ -141,9 +141,8 @@ function removeelement(element){
     scene.remove(element);
 }
 function nail(mymesh){
-    if (mymesh.mass != 0) {mymesh.mass = 0;return;};
+    if (mymesh.mass != elementmass_nailed) {mymesh.mass = elementmass_nailed;return;};
     mymesh.mass = elementmass;
-    return;
     mymesh.nailed = !mymesh.nailed;
     if (mymesh.nailed) mymesh.nailedMatrix = mymesh.matrixWorld.clone();
 }
@@ -181,11 +180,10 @@ function physicsautooff(){
         var obj = objectgroup[i]
         if (obj instanceof Element){
 
-            var factor = 0.92;
-            if (obj.nailed) {factor = 0};
+            var factor = 0.96;
+            //if (obj.nailed) {factor = 0};
              
             var linear = obj.getLinearVelocity();
-            //console.log('linearvelocity: '+linear.length());
             obj.setLinearVelocity(linear.multiplyScalar(factor));
 
             var angular = obj.getAngularVelocity();
