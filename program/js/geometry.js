@@ -290,7 +290,7 @@ function onDocumentMouseDown( event ) {
     mousemoved = false;
     if (currentIntersected != undefined ) {
 
-        if (transformtype == 1) {
+        if (transformtype == 1|| transformtype == 3) {
 
             transformhelper.detach();
             var intersected ;
@@ -308,7 +308,7 @@ function onDocumentMouseDown( event ) {
             };
         };
 
-        if (transformtype == 0) {
+        if (transformtype == 0 || transformtype == 2) {
             
             transformhelper.detach();
             var intersected ;
@@ -337,6 +337,8 @@ function onDocumentMouseDown( event ) {
 
             };
         };
+
+        if (transformtype >1) transformhelper.thingstomove = objectgroup;
         
         
     };

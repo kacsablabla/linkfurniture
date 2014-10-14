@@ -23,12 +23,12 @@ $(document).ready(function(){
     $("#renderercanvas").click( function(event){
         onDocumentMouseClick(event);
     });
-    
+
     $(".ControlContainer").click( function(event){
         
     });
 
-    $(".ControlButton").not("#addsquare,#addequilat,#addrightangle,#save").click(  function(event){
+    $(".ControlButton").not("#addsquare,#addequilat,#addrightangle,#save,#physics,#load").click(  function(event){
 
         $(this).addClass('selected').siblings().removeClass('selected')
 
@@ -63,9 +63,24 @@ $(document).ready(function(){
         //transformtype = 1;
         event.stopPropagation();
     });
+    $("#rotationall").click( function(event){
+        setactivefunction("rotationall");
+        //executecommand('nail');
+        event.stopPropagation();
+    });
     $("#translation").click( function(event){
         setactivefunction("translation");
         //transformtype = 0;
+        event.stopPropagation();
+    });
+    $("#translationall").click( function(event){
+        setactivefunction("translationall");
+        //executecommand('nail');
+        event.stopPropagation();
+    });
+    $("#physics").click( function(event){
+        setactivefunction("physics");
+        //executecommand('nail');
         event.stopPropagation();
     });
     $("#peasantblinding").click( function(event){
@@ -85,6 +100,10 @@ $(document).ready(function(){
         savelog();
         event.stopPropagation();
     });
+    $("#load").click( function(event){
+        loadlog();
+        event.stopPropagation();
+    });
 
 });
 
@@ -98,6 +117,10 @@ function createcontroldiv(){
     container.appendChild(infobox);
     infobox.innerHTML = "";
     
+    var topmenu = document.createElement("div");
+    topmenu.id = "TopMenu";
+    container.appendChild(topmenu);
+    
 /*
     var controlcontainer = document.createElement("div");
     controlcontainer.className = "ControlContainer";
@@ -107,37 +130,44 @@ function createcontroldiv(){
     //stats.domElement.style.left = '400px';
     container.appendChild(controlcontainer);
     */
-    var margin = 10;
-    var distance = 60;
+    var topiconcount = 8;
+    var topspacing = 100/(topiconcount+2);
+    var leftcount = 4;
+    var leftspacing = 100/(leftcount+2);
+    var rightcount = 4;
+    var rightspacing = 100/(rightcount+2);
+    var margin = 0;
+    //var distance = 95;
 
 
     var button = document.createElement("div");
-    button.style.top = margin*2; 
-    button.style.left = margin; 
+    button.style.top = leftspacing+"%"; 
+    button.style.left = margin+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/rightangle.png)';
     button.className = "ControlButton";
     button.id = "addrightangle";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin*2+distance*1.3; 
-    button.style.left = margin; 
+    button.style.top = 2*leftspacing+"%"; 
+    button.style.left = margin+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/square.png)';
     button.className = "ControlButton";
     button.id = "addsquare";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin*2+distance*2.6; 
-    button.style.left = margin; 
+    button.style.top = 3*leftspacing+"%"; 
+    button.style.left = margin+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/equilat.png)';
     button.id = "addequilat";
     button.className = "ControlButton";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin+4*distance; 
-    button.style.left = margin; 
+    button.className = "ControlButton";
+    button.style.top = 4*leftspacing+"%";  
+    button.style.left = margin+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/delete.png)';
     button.className = "ControlButton";
     button.id = "delete";
@@ -146,62 +176,103 @@ function createcontroldiv(){
 
    
     button = document.createElement("div");
-    button.style.top = margin; 
-    button.style.left = margin+distance*1.2; 
+    button.style.top = margin+"%"; 
+    button.style.left = topspacing+"%";//margin+distance; 
     button.style.backgroundImage = 'url(../textures/icons/connect.png)';
     button.className = "ControlButton";
     button.id = "Connect";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin+distance; 
-    button.style.left = margin+distance*1.2; 
+    button.style.top = margin+"%"; 
+    button.style.left = 2*topspacing+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/disconnect.png)';
     button.className = "ControlButton";
     button.id = "Disconnect";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin+2*distance; 
-    button.style.left = margin+distance*1.2; 
+    button.style.top = margin+"%"; 
+    button.style.left = 3*topspacing+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/rotation.png)';
     button.className = "ControlButton";
     button.id = "rotation";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin+3*distance; 
-    button.style.left = margin+distance*1.2; 
+    button.style.top = margin+"%"; 
+    button.style.left = 4*topspacing+"%"; 
+    button.style.backgroundImage = 'url(../textures/icons/rotationall.png)';
+    button.className = "ControlButton";
+    button.id = "rotationall";
+    container.appendChild(button);
+
+    button = document.createElement("div");
+    button.style.top = margin+"%"; 
+    button.style.left = 5*topspacing+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/translation.png)';
     button.className = "ControlButton";
     button.id = "translation";
     container.appendChild(button);
 
     button = document.createElement("div");
-    button.style.top = margin+4*distance; 
-    button.style.left = margin+distance*1.2; 
+    button.style.top = margin+"%"; 
+    button.style.left = 6*topspacing+"%"; 
+    button.style.backgroundImage = 'url(../textures/icons/translationall.png)';
+    button.className = "ControlButton";
+    button.id = "translationall";
+    container.appendChild(button);
+
+    button = document.createElement("div");
+    button.style.top = margin+"%"; 
+    button.style.left = 7*topspacing+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/lock.png)';
     button.className = "ControlButton";
     button.id = "lock";
     container.appendChild(button);
 
-
-
-
     button = document.createElement("div");
-    button.style.bottom = margin; 
-    button.style.right = margin; 
-    button.style.backgroundImage = 'url(../textures/icons/save.png)';
+    button.style.top = margin+"%"; 
+    button.style.left = 8*topspacing+"%"; 
+    button.style.backgroundImage = 'url(../textures/icons/physics.png)';
     button.className = "ControlButton";
-    button.id = "save";
+    button.id = "physics";
     container.appendChild(button);
 
+
+
+
+
     button = document.createElement("div");
-    button.style.bottom = margin; 
-    button.style.right = margin+distance; 
+    button.style.top = rightspacing+"%"; 
+    button.style.right = margin+"%"; 
     button.style.backgroundImage = 'url(../textures/icons/peasantblinding.png)';
     button.className = "ControlButton";
     button.id = "peasantblinding";
+    container.appendChild(button);
+
+    button = document.createElement("div");
+    button.style.top = rightspacing*2+"%"; 
+    button.style.right = margin+"%"; 
+    button.style.backgroundImage = 'url(../textures/icons/undo.png)';
+    button.className = "ControlButton";
+    button.id = "undo";
+    container.appendChild(button);
+
+    button = document.createElement("div");
+    button.style.top = rightspacing*3+"%"; 
+    button.style.right = margin+"%";
+    button.style.backgroundImage = 'url(../textures/icons/load.png)';
+    button.className = "ControlButton";
+    button.id = "load";
+    container.appendChild(button);
+
+    button = document.createElement("div");
+    button.style.top = rightspacing*4+"%"; 
+    button.style.right = margin+"%";
+    button.style.backgroundImage = 'url(../textures/icons/save.png)';
+    button.className = "ControlButton";
+    button.id = "save";
     container.appendChild(button);
 
 
@@ -218,6 +289,9 @@ function setactivefunction(newfunction){
     };
     if (newfunction == "translation") transformtype = 0;
     if (newfunction == "rotation") transformtype = 1;
+    if (newfunction == "translationall") transformtype = 2;
+    if (newfunction == "rotationall") transformtype = 3;
+    if (newfunction == "physics") physicson();
     deselectall();
     switch(newfunction){
         case "connect":

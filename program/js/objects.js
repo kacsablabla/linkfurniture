@@ -48,7 +48,9 @@ function loadmeshes(){
 TransformHelper = function(){
 
     this.target = undefined;
+    this.thingstomove = [];
     this.refelement;
+    this.oldmatrix;
     this.geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
     
     this.material = new THREE.MeshBasicMaterial({
@@ -65,6 +67,8 @@ TransformHelper = function(){
         this.target = target;
         this.setrefelement(refelement);
         transformcontrol.attach(this);
+        this.thingstomove.push(target);
+        this.oldmatrix = this.matrixWorld.clone();
     }
     this.setrefelement = function(refelement){
         
@@ -75,8 +79,21 @@ TransformHelper = function(){
         updatematrices(this);
     };
 
-    this.updatetarget = function(){
+    this.updatetarget = function(target){
 
+        var oldinverse = (new THREE.Matrix4()).getInverse(this.oldmatrix);
+        var transitionmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,oldinverse);
+        //var center = target.center;//target.localToWorld(target.center);
+        //var centertranslation = (new THREE.Matrix4()).makeTranslation(center.x,center.y,center.z);
+        //var centertranslationinverse = (new THREE.Matrix4()).makeTranslation(-center.x,-center.y,-center.z);
+
+        //target.applyMatrix(centertranslationinverse );
+        target.applyMatrix(transitionmatrix.clone());
+        //target.applyMatrix(centertranslation);
+        updatematrices(target);
+        target.__dirtyPosition = true;
+        target.__dirtyRotation = true;
+        /*
         var targetinverse = new THREE.Matrix4();
         var refinverse = new THREE.Matrix4();
         targetinverse.getInverse(this.target.matrixWorld);
@@ -87,6 +104,27 @@ TransformHelper = function(){
         updatematrices(this.target);
         this.target.__dirtyPosition = true;
         this.target.__dirtyRotation = true;
+
+        
+        var targetmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,target.matrixWorld);
+        
+        
+        var refinverse = new THREE.Matrix4();
+        targetinverse.getInverse(target.matrixWorld);
+        refinverse.getInverse(this.refelement.matrix);
+        target.applyMatrix(targetinverse);
+        target.applyMatrix(refinverse);
+        target.applyMatrix(this.matrixWorld.clone());
+        
+        var targetinverse = new THREE.Matrix4();
+        targetinverse.getInverse(target.matrixWorld);
+        target.applyMatrix(targetinverse);
+        target.applyMatrix(targetmatrix);
+        //target.matrixWorld = targetmatrix;
+        updatematrices(target);
+        target.__dirtyPosition = true;
+        target.__dirtyRotation = true;
+        */
     }
 
     this.detach = function(){
@@ -95,10 +133,14 @@ TransformHelper = function(){
         this.refelement = undefined;
         transformcontrol.detach(this);
         this.target = undefined;
+        this.thingstomove = [];
     }
     this.update = function(){
-        if (this.target == undefined)return;
-        this.updatetarget();
+        for (var i = this.thingstomove.length - 1; i >= 0; i--) {
+            this.updatetarget(this.thingstomove[i]);
+        };
+        this.oldmatrix = this.matrixWorld.clone();
+        
     }
 }
 TransformHelper.prototype = Object.create(THREE.Mesh.prototype);

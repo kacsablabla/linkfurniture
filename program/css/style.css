@@ -62,9 +62,9 @@ h2 {
 }
 #container {
 	position: absolute;
-	left: 310px;
-	width: -webkit-calc(100% - 310px); /* Safari */
-	width: calc(100% - 310px);
+	left: 0px;
+	width: -webkit-calc(100% ); /* Safari */
+	width: calc(100% );
 	height: 100%;
 	border: 0px;
 }
@@ -92,10 +92,27 @@ h2 {
 	left:0px; 
 	pointer-events:none;
 }
-.ControlButton{
+
+.LeftMenu{
 	position:absolute;
-    width:100px;
-    height:100px;
+	width:100%;
+	height:10vW;
+	background-color:rgba(255, 255, 255, 0.6);
+	top:0px;
+	left:0px;
+}
+.BottomMenu{
+	position:absolute;
+	width:100%;
+	height:10%;
+	background-color:rgba(255, 255, 255, 0.6);
+	top:0px;
+	left:0px;
+}
+.ControlButton,#TopMenu{
+  	width:8%;
+  	padding-top:8%;
+    align-content:center;
     background-color:rgba(255, 255, 255, 0.0);
 	-webkit-transition-duration: 0.1s;
 	transition-duration: 0.1s;
@@ -106,8 +123,11 @@ h2 {
 	-webkit-transform: scale3d(0.8,0.8,0.8);
 	box-shadow: 0 0 1px rgba(0, 150, 150, 0);
     background-size:cover;
+    background-position: center;
     display: inline-block;
+	position:absolute;
 }
+
 .ControlButton:hover{
 	
 	-webkit-transform: scale3d(1,1,1) rotate(12deg);
@@ -123,13 +143,23 @@ h2 {
     -webkit-transform: scale3d(1,1,1) rotate(12deg);
 }
 .InfoBox {
-	position:absolute;
 	margin-left: 25%;
     margin-right: 25%;
     width: 50%;
-	height:15%;
+	height:20%;
 	bottom:1%;
 	text-align: center;
-	background-color:rgba(255, 255, 255, 0.1);
+	background-color:rgba(255, 255, 255, 0);
+	background-image:url('../textures/text_bubble.png');
+    background-position: center;
+    background-size:100% 100%;
 	pointer-events:none;
+	position:absolute;
+}
+
+#TopMenu{
+	width:100%;
+	top: 0px;
+	left: 0px;
+	background-color:rgba(160, 160, 175, 0.9);
 }
