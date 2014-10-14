@@ -250,11 +250,11 @@ function onDocumentMouseClick(event){
             transformhelper.detach();
             orbitcontrol.enabled = true;
         }
-        else if (currentIntersected.transformable) {
+        else if (currentIntersected instanceof ElementVisualizer) {
             physicssimulation = false;
             transformhelper.detach();
             select(currentIntersected);
-            selectedelements.push(currentIntersected);
+            selectedelements.push(currentIntersected.parent);
             performfunction();
             //transformhelper.attach( currentIntersected);
             //orbitcontrol.enabled = false; 

@@ -18,7 +18,7 @@ function deselectcorners(){
 function deselectelements(){
 
     for (var i = selectedelements.length - 1; i >= 0; i--) {
-        deselect(selectedelements[i]);
+        deselect(selectedelements[i].visualmesh);
     };
     selectedelements = [];
 }
@@ -141,6 +141,9 @@ function removeelement(element){
     scene.remove(element);
 }
 function nail(mymesh){
+    if (mymesh.mass != 0) {mymesh.mass = 0;return;};
+    mymesh.mass = elementmass;
+    return;
     mymesh.nailed = !mymesh.nailed;
     if (mymesh.nailed) mymesh.nailedMatrix = mymesh.matrixWorld.clone();
 }
@@ -174,7 +177,6 @@ function physicsautooff(){
     if (physicssimulationcounter >=0) {
         shouldstopphysics = false;
     };
-    
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i]
         if (obj instanceof Element){

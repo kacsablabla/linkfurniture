@@ -12,7 +12,7 @@ var color_default_connector = 0x888888;
 var elementmass = 500;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
 var cornerradius_symbolic = 6.5;
-var cornerradius_show = 12;
+var cornerradius_show = 17;
 var edgelength = 510;
 var squaregeom;
 var equigeom;
@@ -84,6 +84,8 @@ TransformHelper = function(){
         this.target.applyMatrix(refinverse);
         this.target.applyMatrix(this.matrixWorld.clone());
         updatematrices(this.target);
+        this.target.__dirtyPosition = true;
+        this.target.__dirtyRotation = true;
     }
 
     this.detach = function(){
@@ -385,6 +387,17 @@ Corner = function(parent) {
 };
 Corner.prototype = Object.create(THREE.Mesh.prototype);
 
+ElementVisualizer = function(geometry){
+    THREE.Mesh.call(this,geometry,elementmaterial.clone());
+    this.selected = false;
+
+    this.getdefaultcolor = function(){
+        if (this.parent.mass == 0) {return color_nailed}
+        else return color_default;
+    }
+}
+ElementVisualizer.prototype = Object.create(THREE.Mesh.prototype);
+
 Element = function(geometry){
 
     this.selected = false;
@@ -393,8 +406,20 @@ Element = function(geometry){
     this.edges = [];
     this.nailed = false;
     this.nailedMatrix = undefined;
+    this.visualmesh = new ElementVisualizer(this.geometry);
+    this.center = new THREE.Vector3();
 
-    Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),elementmass);
+    for (var i = this.cornerpositions.length - 1; i >= 0; i--) {
+        this.center.add(this.cornerpositions[i]);
+    };
+    this.center.divideScalar(this.cornerpositions.length);
+
+    var spheregeometry =  new THREE.SphereGeometry( 21);
+    spheregeometry.applyMatrix( new THREE.Matrix4().makeTranslation(this.center.x,this.center.y,this.center.z) );
+    //Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),elementmass);
+    Physijs.ConvexMesh.call(this,spheregeometry,elementmaterial.clone(),elementmass);
+    //this.visible = false;
+    this.add( this.visualmesh);
 
     this.initconstraints = function(){
 
@@ -585,7 +610,7 @@ var hoverover = function(element) {
     if (element.selected == undefined)return;
     if (!element.selected) {
         element.material.color.set (color_hovered);
-        if (element instanceof Element) {element.material.ambient.set(color_hovered)};
+        if (element instanceof ElementVisualizer) {element.material.ambient.set(color_hovered)};
     };
     
 }
@@ -593,20 +618,20 @@ var hoverout = function(element) {
     if (element.selected == undefined)return;
     if (!element.selected) {
         element.material.color.set (element.getdefaultcolor());
-        if (element instanceof Element) {element.material.ambient.set(element.getdefaultcolor())};
+        if (element instanceof ElementVisualizer) {element.material.ambient.set(element.getdefaultcolor())};
     };
 }
 var select = function(element) {
     if (element.selected == undefined)return;
     element.material.color.set (color_selected);
-    if (element instanceof Element) {element.material.ambient.set(color_selected)};
+    if (element instanceof ElementVisualizer) {element.material.ambient.set(color_selected)};
     element.selected = true;
 }
 var deselect = function(element) {
     if (element.selected == undefined)return;
     if (element instanceof CornerConnector) {element = element.connector_show};
     element.material.color.set (element.getdefaultcolor());
-    if (element instanceof Element) {element.material.ambient.set(element.getdefaultcolor())};
+    if (element instanceof ElementVisualizer) {element.material.ambient.set(element.getdefaultcolor())};
     element.selected = false;
 }
 
