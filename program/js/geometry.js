@@ -46,6 +46,7 @@ function main_init() {
 
     renderer = new THREE.WebGLRenderer( { antialias: true} );
     container.appendChild(renderer.domElement);
+    renderer.domElement.id = "renderercanvas";
     //renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.shadowMapEnabled = true;
     renderer.shadowMapType = THREE.PCFSoftShadowMap;
@@ -104,10 +105,10 @@ function main_init() {
     
     orbitcontrol = new THREE.OrbitControls( camera );
     orbitcontrol.addEventListener( 'change', update );
-    renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
-    renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
-    renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
-    renderer.domElement.addEventListener( 'click', onDocumentMouseClick, false );
+    //renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    //renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+    //renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    //renderer.domElement.addEventListener( 'click', onDocumentMouseClick, false );
     window.addEventListener( 'resize', onWindowResize, false );
 
     onWindowResize();

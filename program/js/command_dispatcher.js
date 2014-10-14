@@ -6,7 +6,24 @@ $(document).ready(function(){
     main_init();
     createcontroldiv();
 
+//renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
+    //renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
+    //renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    //renderer.domElement.addEventListener( 'click', onDocumentMouseClick, false );
 
+    $("#renderercanvas").mousedown( function(event){
+        onDocumentMouseDown(event);
+    });
+    $("#renderercanvas").mouseup( function(event){
+        onDocumentMouseUp(event);
+    });
+    $("#renderercanvas").mousemove( function(event){
+        onDocumentMouseMove(event);
+    });
+    $("#renderercanvas").click( function(event){
+        onDocumentMouseClick(event);
+    });
+    
     $(".ControlContainer").click( function(event){
         
     });
