@@ -9,7 +9,7 @@ var color_selected = 0xff0000;
 var color_nailed = 0xfcd6a9;
 var color_default_connector = 0x888888;
 
-var elementmass = 50;
+var elementmass = 500;
 var elementmass_nailed = 500000;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
 var cornerradius_symbolic = 6.5;
@@ -27,17 +27,30 @@ var elementmaterial = new THREE.MeshLambertMaterial({
     side:THREE.FrontSide
 });
 
+var helpermaterial = new THREE.MeshBasicMaterial({
+    color: color_default_connector, 
+    transparent: true, 
+    opacity: 0.8,
+    side:THREE.FrontSide
+});
+
+var elementgeometry = new THREE.SphereGeometry(40);
+var connectorgeometry = new THREE.SphereGeometry( cornerradius_symbolic);
+var cornergeometry = new THREE.SphereGeometry(cornerradius_show);
+var edgegeometry = new THREE.CylinderGeometry(cornerradius_show, cornerradius_show, 400, 13, 1);
+
+
 function loadmeshes(){
     var loader = new THREE.STLLoader();
-    loader.load( 'models/square/element.stl', function ( geometry ) {
+    loader.load( 'models/concave/square/element.stl', function ( geometry ) {
         squaregeom = geometry;
         assignUVs(squaregeom);
     } );
-    loader.load( 'models/equilat/element.stl', function ( geometry ) {
+    loader.load( 'models/concave/equilat/element.stl', function ( geometry ) {
         equigeom = geometry;
         assignUVs(equigeom);
     } );
-    loader.load( 'models/rightangle/element.stl', function ( geometry ) {
+    loader.load( 'models/concave/rightangle/element.stl', function ( geometry ) {
         rectgeom = geometry;
         assignUVs(rectgeom);
     } );
@@ -51,14 +64,9 @@ TransformHelper = function(){
     this.thingstomove = [];
     this.refelement;
     this.oldmatrix;
-    this.geometry =  new THREE.CylinderGeometry(19, 19, 500, 13, 1);
-    
-    this.material = new THREE.MeshBasicMaterial({
-        color: 0x000000, 
-        side:THREE.FrontSide
-    });
-    THREE.Mesh.call(this,this.geometry,this.material);
-    this.visible = false;
+
+    THREE.Mesh.call(this,edgegeometry,helpermaterial.clone());
+    //this.visible = false;
     this.attach = function(target,refelement){
 
         if (this.target != undefined) return;
@@ -83,12 +91,10 @@ TransformHelper = function(){
 
         var oldinverse = (new THREE.Matrix4()).getInverse(this.oldmatrix);
         var transitionmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,oldinverse);
-
         target.applyMatrix(transitionmatrix.clone());
         updatematrices(target);
         target.__dirtyPosition = true;
         target.__dirtyRotation = true;
-        
     }
 
     this.detach = function(){
@@ -111,15 +117,7 @@ TransformHelper.prototype = Object.create(THREE.Mesh.prototype);
 
 Visualizer = function(geometry){
 
-    this.geometry =  geometry;
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: color_default_connector, 
-        transparent: true, 
-        opacity: 0.8,
-        side:THREE.FrontSide
-    });
-    THREE.Mesh.call(this,this.geometry,material);
+    THREE.Mesh.call(this,geometry,helpermaterial.clone());
     this.selected = false;
 
     this.getdefaultcolor = function(){
@@ -131,23 +129,16 @@ Visualizer.prototype = Object.create(THREE.Mesh.prototype);
 
 CornerConnector = function(){
     
-    var geometry =  new THREE.SphereGeometry( cornerradius_symbolic);
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: color_default_connector, 
-        transparent: true, 
-        opacity: 0.8,
-        side:THREE.FrontSide
-    });
+    var geometry =  connectorgeometry;
 
     this.selected = false;
     this.transformable = false;
-    this.connector_show = new Visualizer(new THREE.SphereGeometry(cornerradius_show),material);
+    this.connector_show = new Visualizer(cornergeometry);
 
     this.constraints = {};
     this.corners = [];
 
-    Physijs.SphereMesh.call(this,geometry,material,1);
+    Physijs.SphereMesh.call(this,connectorgeometry,helpermaterial.clone(),1);
     this.add(this.connector_show);
     //this.visible = false;
 
@@ -228,19 +219,11 @@ CornerConnector.prototype = Object.create(Physijs.SphereMesh.prototype);
 Edge = function(c1,c2,parent) {
 
     parent == undefined ?  this.parent = parent : this.parent = scene;
-    var reallength = c1.position.distanceTo(c2.position)-2*cornerradius_symbolic;
-
-    this.geometry =  new THREE.CylinderGeometry(cornerradius_show, cornerradius_show, reallength, 13, 1);
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: color_default_connector, 
-        transparent: true, 
-        opacity: 0.8,
-        side:THREE.FrontSide
-    });
+    this.cornerdistance = c1.position.distanceTo(c2.position);
+    this.reallength = this.cornerdistance-2*cornerradius_symbolic;
 
     this.corners = [c1,c2];
-    THREE.Mesh.call(this,this.geometry,material);
+    THREE.Mesh.call(this,edgegeometry,helpermaterial.clone());
 
     this.selected = false;
     this.transformable = false;
@@ -286,15 +269,6 @@ Edge.prototype = Object.create(THREE.Mesh.prototype);
 
 Corner = function(parent) {
 
-    var geometry =  new THREE.SphereGeometry( cornerradius_show);
-    
-    var material = new THREE.MeshBasicMaterial({
-        color: color_default_connector, 
-        transparent: true, 
-        opacity: 0.8,
-        side:THREE.FrontSide
-    });
-
     parent == undefined ?  this.parent = parent : this.parent = scene;
 
     this.realconnector = undefined;
@@ -302,7 +276,7 @@ Corner = function(parent) {
     this.transformable = false;
     this.connector = undefined;
 
-    THREE.Mesh.call(this,geometry,material);
+    THREE.Mesh.call(this,cornergeometry,helpermaterial.clone());
 
     this.getdefaultcolor = function(){
         if (this.mass == 0) {return color_nailed}
@@ -383,6 +357,7 @@ Element = function(geometry){
     this.nailed = false;
     this.nailedMatrix = undefined;
     this.visualmesh = new ElementVisualizer(this.geometry);
+    /*
     this.center = new THREE.Vector3();
 
     for (var i = this.cornerpositions.length - 1; i >= 0; i--) {
@@ -390,10 +365,9 @@ Element = function(geometry){
     };
     this.center.divideScalar(this.cornerpositions.length);
 
-    var spheregeometry =  new THREE.SphereGeometry( 60);
     spheregeometry.applyMatrix( new THREE.Matrix4().makeTranslation(this.center.x,this.center.y,this.center.z) );
-    //Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),elementmass);
-    Physijs.ConvexMesh.call(this,spheregeometry,elementmaterial.clone(),elementmass);
+    */
+    Physijs.ConvexMesh.call(this,elementgeometry,elementmaterial.clone(),elementmass);
     //this.visible = false;
     this.add( this.visualmesh);
 
@@ -483,10 +457,10 @@ Element.prototype = Object.create(Physijs.ConvexMesh.prototype);
 Square = function() {
 
     this.cornerpositions = [
-        new THREE.Vector3(-6.5,-6.5,0),
-        new THREE.Vector3(-6.5,516.5,0),
-        new THREE.Vector3(516.5,516.5,0),
-        new THREE.Vector3(516.5,-6.5,0)
+        new THREE.Vector3(-261.5,261.5,0),
+        new THREE.Vector3(261.5,261.5,0),
+        new THREE.Vector3(261.5,-261.5,0),
+        new THREE.Vector3(-261.5,-261.5,0)
     ];
     this.geometry = squaregeom;
     Element.call(this,this.geometry);
@@ -509,9 +483,9 @@ Square.prototype = Object.create(Element.prototype);
 Equilat = function() {
     
     this.cornerpositions = [
-        new THREE.Vector3(-11.26,-6.5,0),
-        new THREE.Vector3(250.24,446.43,0),
-        new THREE.Vector3(511.74,-6.5,0)
+        new THREE.Vector3(0,301.95,0),
+        new THREE.Vector3(261.5,-150.98,0),
+        new THREE.Vector3(-261.5,-150.98,0)
     ];
     this.geometry = equigeom; 
     Element.call(this,this.geometry);
@@ -534,9 +508,9 @@ Equilat.prototype = Object.create(Element.prototype);
 RightAngled = function() {
     
     this.cornerpositions = [
-        new THREE.Vector3(-6.5,-6.5,0),
-        new THREE.Vector3(-6.5,516.5,0),
-        new THREE.Vector3(516.5,-6.5,0)
+        new THREE.Vector3(-174.33,348.67,0),
+        new THREE.Vector3(348.67,-174.33,0),
+        new THREE.Vector3(-174.33,-174.33,0)
     ];
     this.geometry = rectgeom; 
     Element.call(this,this.geometry);
@@ -561,12 +535,8 @@ RightAngled.prototype = Object.create(Element.prototype);
 Table = function(){
 
     var tabletexture = new THREE.ImageUtils.loadTexture('textures/skybox/sky/bottom.jpg');
-    //tabletexture.wrapS = THREE.MirroredRepeatWrapping;
-    //tabletexture.wrapT = THREE.RepeatWrapping;
-    //tabletexture.repeat.set( 14, 14 );
 
     var material = new THREE.MeshBasicMaterial({
-                //color:0xffffff,
                 map:tabletexture,
                 side:THREE.FrontSide
     });

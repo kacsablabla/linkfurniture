@@ -9,34 +9,35 @@ var connectormaterial = new THREE.MeshLambertMaterial({
     side:THREE.FrontSide
 });
 
+var path_prefix = "models/concave";
 loadconnectormeshes();
 
 function loadconnectormeshes(){
     var loader = new THREE.STLLoader();
 
-    loader.load( 'models/equilat/connector1.stl', function ( geometry1 ) {
+    loader.load( path_prefix+'/equilat/connector1.stl', function ( geometry1 ) {
         assignUVs(geometry1);
         equilatconnectors.push(geometry1);
-        loader.load( 'models/equilat/connector2.stl', function ( geometry2 ) {
+        loader.load( path_prefix+'/equilat/connector2.stl', function ( geometry2 ) {
             assignUVs(geometry2);
             equilatconnectors.push(geometry2);
-                loader.load( 'models/equilat/connector3.stl', function ( geometry3 ) {
+                loader.load( path_prefix+'/equilat/connector3.stl', function ( geometry3 ) {
                 assignUVs(geometry3);
                 equilatconnectors.push(geometry3);
             } );
         } );
     } );
 
-    loader.load( 'models/square/connector1.stl', function ( geometry1 ) {
+    loader.load( path_prefix+'/square/connector1.stl', function ( geometry1 ) {
         assignUVs(geometry1);
         squareconnectors.push(geometry1);
-        loader.load( 'models/square/connector2.stl', function ( geometry2 ) {
+        loader.load( path_prefix+'/square/connector2.stl', function ( geometry2 ) {
             assignUVs(geometry2);
             squareconnectors.push(geometry2);
-                loader.load( 'models/square/connector3.stl', function ( geometry3 ) {
+                loader.load( path_prefix+'/square/connector3.stl', function ( geometry3 ) {
                 assignUVs(geometry3);
                 squareconnectors.push(geometry3);
-                    loader.load( 'models/square/connector4.stl', function ( geometry4 ) {
+                    loader.load( path_prefix+'/square/connector4.stl', function ( geometry4 ) {
                     assignUVs(geometry4);
                     squareconnectors.push(geometry4);
                 } );
@@ -44,13 +45,13 @@ function loadconnectormeshes(){
         } );
     } );
 
-    loader.load( 'models/rightangle/connector1.stl', function ( geometry1 ) {
+    loader.load( path_prefix+'/rightangle/connector1.stl', function ( geometry1 ) {
         assignUVs(geometry1);
         rightangleconnectors.push(geometry1);
-        loader.load( 'models/rightangle/connector2.stl', function ( geometry2 ) {
+        loader.load( path_prefix+'/rightangle/connector2.stl', function ( geometry2 ) {
             assignUVs(geometry2);
             rightangleconnectors.push(geometry2);
-                loader.load( 'models/rightangle/connector3.stl', function ( geometry3 ) {
+                loader.load( path_prefix+'/rightangle/connector3.stl', function ( geometry3 ) {
                 assignUVs(geometry3);
                 rightangleconnectors.push(geometry3);
             } );
