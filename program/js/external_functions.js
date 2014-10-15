@@ -11,6 +11,7 @@ function deselectcorners(){
 
     for (var i = selectedcorners.length - 1; i >= 0; i--) {
         deselect(selectedcorners[i]);
+        //selectedcorners[i].realconnector.visible = false;
     };
     selectedcorners = [];
 }
@@ -39,7 +40,7 @@ function connectcorners(a,b){
     //console.log('connectorb position: '+connectorb.position);
     if (connectora == connectorb) return false;
     connectora.mergeWithConnector(connectorb);
-    console.log('merged position: '+connectorb.position);
+    //console.log('merged position: '+connectorb.position);
     return true;
     //physicson();
 }

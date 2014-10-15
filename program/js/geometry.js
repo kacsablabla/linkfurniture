@@ -44,7 +44,7 @@ function main_init() {
     container.appendChild( stats.domElement );
     
 
-    renderer = new THREE.WebGLRenderer( { antialias: true} );
+    renderer = new THREE.WebGLRenderer( { antialias: true, preserveDrawingBuffer: true } );
     container.appendChild(renderer.domElement);
     renderer.domElement.id = "renderercanvas";
     //renderer.setSize( window.innerWidth, window.innerHeight );
@@ -244,8 +244,9 @@ function selectmousetarget(){
 };
 
 function onDocumentMouseClick(event){
+    //console.log('mouseclick');
     if (event.button !=0) return;
-    if (!mousemoved) {
+    if (mousemoved<=2) {
         if (currentIntersected == undefined) {
             deselectall();
             transformhelper.detach();
@@ -270,6 +271,8 @@ function onDocumentMouseClick(event){
             else if (currentIntersected instanceof Corner ||
              currentIntersected instanceof CornerConnector){
                 selectedcorners.push(currentIntersected);
+                //currentIntersected.realconnector.visible = true;
+                //console.log(currentIntersected.parent.corners.indexOf(currentIntersected))
                 performfunction();
             } 
             if (currentIntersected instanceof Visualizer) {
@@ -282,12 +285,13 @@ function onDocumentMouseClick(event){
 }
 
 function onDocumentMouseDown( event ) {
+    //console.log('mousedown');
     if (event.button !=0 ) return;
     container.focus();
     event.preventDefault();
     mousedown = true;
     mousedragging = false;
-    mousemoved = false;
+    mousemoved = 0;
     if (currentIntersected != undefined ) {
 
         if (transformtype == 1|| transformtype == 3) {
@@ -345,7 +349,7 @@ function onDocumentMouseDown( event ) {
     
 }
 function onDocumentMouseUp( event ) {
-
+    //console.log('mouseup');
     if (event.button !=0) return;
     event.preventDefault();
     mousedown = false;
@@ -354,14 +358,14 @@ function onDocumentMouseUp( event ) {
 }
 
 function onDocumentMouseMove( event ) {
-
+    //console.log('mousemove');
     if (event.button !=0) return;
     event.preventDefault();
     if (mousedown) {
         mousedragging = true;
     }
     else selectmousetarget();
-    mousemoved = true;
+    mousemoved += 1;
     //container.offsetWidth, container.offsetHeight
     var rect = container.getBoundingClientRect();
     mouse.x = ( (event.clientX-rect.left)/ container.offsetWidth ) * 2 - 1;

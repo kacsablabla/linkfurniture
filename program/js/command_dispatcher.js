@@ -28,7 +28,7 @@ $(document).ready(function(){
         
     });
 
-    $(".ControlButton").not("#addsquare,#addequilat,#addrightangle,#save,#physics,#load").click(  function(event){
+    $(".ControlButton").not("#addsquare,#addequilat,#addrightangle,#save,#physics,#load,#undo").click(  function(event){
 
         $(this).addClass('selected').siblings().removeClass('selected')
 
@@ -96,12 +96,17 @@ $(document).ready(function(){
         //executecommand('nail');
         event.stopPropagation();
     });
-    $("#save").click( function(event){
-        savelog();
+    $("#undo").click( function(event){
+        //loadlog();
         event.stopPropagation();
     });
     $("#load").click( function(event){
         loadlog();
+        event.stopPropagation();
+    });
+    $("#save").click( function(event){
+        exportconnectors();
+        //savelog();
         event.stopPropagation();
     });
 
@@ -146,6 +151,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/rightangle.png)';
     button.className = "ControlButton";
     button.id = "addrightangle";
+    button.title = "add a triangle element";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -154,6 +160,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/square.png)';
     button.className = "ControlButton";
     button.id = "addsquare";
+    button.title = "add a square element";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -162,6 +169,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/equilat.png)';
     button.id = "addequilat";
     button.className = "ControlButton";
+    button.title = "add a triangle element";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -171,6 +179,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/delete.png)';
     button.className = "ControlButton";
     button.id = "delete";
+    button.title = "delete an element";
     container.appendChild(button);
 
 
@@ -181,6 +190,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/connect.png)';
     button.className = "ControlButton";
     button.id = "Connect";
+    button.title = "connect corners or edges";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -189,6 +199,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/disconnect.png)';
     button.className = "ControlButton";
     button.id = "Disconnect";
+    button.title = "disconnect corners or edges";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -197,6 +208,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/rotation.png)';
     button.className = "ControlButton";
     button.id = "rotation";
+    button.title = "rotate a single element";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -205,6 +217,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/rotationall.png)';
     button.className = "ControlButton";
     button.id = "rotationall";
+    button.title = "rotate the whole configuration";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -213,6 +226,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/translation.png)';
     button.className = "ControlButton";
     button.id = "translation";
+    button.title = "move a single element";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -221,6 +235,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/translationall.png)';
     button.className = "ControlButton";
     button.id = "translationall";
+    button.title = "move the whole configuration";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -229,6 +244,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/lock.png)';
     button.className = "ControlButton";
     button.id = "lock";
+    button.title = "lock the element to the current position";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -237,6 +253,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/physics.png)';
     button.className = "ControlButton";
     button.id = "physics";
+    button.title = "move elements to their position";
     container.appendChild(button);
 
 
@@ -249,6 +266,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/peasantblinding.png)';
     button.className = "ControlButton";
     button.id = "peasantblinding";
+    button.title = "show final view";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -257,6 +275,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/undo.png)';
     button.className = "ControlButton";
     button.id = "undo";
+    button.title = "undo";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -265,6 +284,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/load.png)';
     button.className = "ControlButton";
     button.id = "load";
+    button.title = "load configuration";
     container.appendChild(button);
 
     button = document.createElement("div");
@@ -273,6 +293,7 @@ function createcontroldiv(){
     button.style.backgroundImage = 'url(../textures/icons/save.png)';
     button.className = "ControlButton";
     button.id = "save";
+    button.title = "save configuration";
     container.appendChild(button);
 
 
@@ -284,7 +305,8 @@ function setactivefunction(newfunction){
     if (activefunction ==  "peasantblinding"||newfunction ==  "peasantblinding") {
         peasantblinding();
     };
-    if (activefunction ==  "translation" || activefunction ==  "rotation") {
+    if (activefunction ==  "translation" || activefunction ==  "rotation" ||
+        activefunction ==  "translationall" || activefunction ==  "rotationall") {
         transformtype = -1;
     };
     if (newfunction == "translation") transformtype = 0;
