@@ -556,8 +556,9 @@ Table.prototype = Object.create(Physijs.PlaneMesh.prototype);
 var hoverover = function(element) {
     if (element.selected == undefined)return;
     if (!element.selected) {
+        if (element.parent.nailed && element instanceof ElementVisualizer) return;
         element.material.color.set (color_hovered);
-        if (element instanceof ElementVisualizer) {element.material.ambient.set(color_hovered)};
+        if (element instanceof ElementVisualizer ) {element.material.ambient.set(color_hovered)};
     };
     
 }
@@ -571,7 +572,7 @@ var hoverout = function(element) {
 var select = function(element) {
     if (element.selected == undefined)return;
     element.material.color.set (color_selected);
-    if (element instanceof ElementVisualizer) {element.material.ambient.set(color_selected)};
+    if (element instanceof ElementVisualizer ) {element.material.ambient.set(color_selected)};
     element.selected = true;
 }
 var deselect = function(element) {

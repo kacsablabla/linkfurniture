@@ -378,6 +378,8 @@ function performfunction(){
             break;
         case "delete":
             if (selectedelements.length>0) removeelement(selectedelements[0]);
+            activefunction = undefined;
+            document.getElementById('delete').classList.remove("selected");
             break;
         case "lock":
             if (selectedelements.length>0) {
