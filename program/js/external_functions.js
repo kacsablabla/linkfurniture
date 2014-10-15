@@ -11,7 +11,7 @@ function deselectcorners(){
 
     for (var i = selectedcorners.length - 1; i >= 0; i--) {
         deselect(selectedcorners[i]);
-        //selectedcorners[i].realconnector.visible = false;
+        selectedcorners[i].realconnector.visible = false;
     };
     selectedcorners = [];
 }
@@ -101,9 +101,18 @@ function disconnectedges(a,b){
 
 function addtoedge(element,edge){
 
-    updatematrices(element.edges[0]);
+    var appropriateedge = undefined;
+    var cornerdistance = edge.cornerdistance;
+    for (var i = element.edges.length - 1; i >= 0; i--) {
+        if (Math.abs(element.edges[i].cornerdistance - cornerdistance) < 5){
+            appropriateedge = element.edges[i];
+            break;
+        }
+    };
+    if (!appropriateedge) return;
+    updatematrices(appropriateedge);
     var inverse = new THREE.Matrix4();
-    inverse.getInverse(element.edges[0].matrixWorld);
+    inverse.getInverse(appropriateedge.matrixWorld);
     element.applyMatrix(inverse);
 
     //return;
@@ -111,7 +120,7 @@ function addtoedge(element,edge){
     updatematrices(element);
     element.__dirtyPosition = true;
     element.__dirtyRotation = true;
-    connectedges(element.edges[0],edge);
+    connectedges(appropriateedge,edge);
 
 }
 function removeelement(element){

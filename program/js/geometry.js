@@ -183,6 +183,7 @@ function main_init() {
         for (var i = objectgroup.length - 1; i >= 0; i--) {
             if (objectgroup[i] instanceof CornerConnector) continue;
             objectgroup[i].rendercallback();
+            boundposition(objectgroup[i]);
         };
         if (physicssimulation) {
             physicsautooff();
@@ -201,6 +202,17 @@ function main_init() {
         if (camera.position.z<=-limit)camera.position.z = -limit;
     }
     animate();
+
+    function boundposition(element){
+
+        var limit = boxsize/2-200;
+        if (element.position.x>=limit)element.position.x = limit;
+        if (element.position.y>=limit)element.position.y = limit;
+        if (element.position.z>=limit)element.position.z = limit;
+        if (element.position.x<=-limit)element.position.x = -limit;
+        if (element.position.y<=20)element.position.y = 0;
+        if (element.position.z<=-limit)element.position.z = -limit;
+    }
     
     
 };
@@ -271,8 +283,8 @@ function onDocumentMouseClick(event){
             else if (currentIntersected instanceof Corner ||
              currentIntersected instanceof CornerConnector){
                 selectedcorners.push(currentIntersected);
-                //currentIntersected.realconnector.visible = true;
-                //console.log(currentIntersected.parent.corners.indexOf(currentIntersected))
+                currentIntersected.realconnector.visible = true;
+                console.log(currentIntersected.parent.corners.indexOf(currentIntersected))
                 performfunction();
             } 
             if (currentIntersected instanceof Visualizer) {

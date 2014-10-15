@@ -34,7 +34,7 @@ var helpermaterial = new THREE.MeshBasicMaterial({
     side:THREE.FrontSide
 });
 
-var elementgeometry = new THREE.SphereGeometry(40);
+var elementgeometry = new THREE.SphereGeometry(50);
 var connectorgeometry = new THREE.SphereGeometry( cornerradius_symbolic);
 var cornergeometry = new THREE.SphereGeometry(cornerradius_show);
 var edgegeometry = new THREE.CylinderGeometry(cornerradius_show, cornerradius_show, 400, 13, 1);
@@ -368,6 +368,7 @@ Element = function(geometry){
     spheregeometry.applyMatrix( new THREE.Matrix4().makeTranslation(this.center.x,this.center.y,this.center.z) );
     */
     Physijs.ConvexMesh.call(this,elementgeometry,elementmaterial.clone(),elementmass);
+    this.position.set(0,260,0);
     //this.visible = false;
     this.add( this.visualmesh);
 
