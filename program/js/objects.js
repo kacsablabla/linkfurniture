@@ -9,7 +9,7 @@ var color_selected = 0xff0000;
 var color_nailed = 0xfcd6a9;
 var color_default_connector = 0x888888;
 
-var elementmass = 500;
+var elementmass = 50;
 var elementmass_nailed = 500000;
 var texture = new THREE.ImageUtils.loadTexture("textures/wood_texture2.jpg");
 var cornerradius_symbolic = 6.5;
@@ -83,48 +83,12 @@ TransformHelper = function(){
 
         var oldinverse = (new THREE.Matrix4()).getInverse(this.oldmatrix);
         var transitionmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,oldinverse);
-        //var center = target.center;//target.localToWorld(target.center);
-        //var centertranslation = (new THREE.Matrix4()).makeTranslation(center.x,center.y,center.z);
-        //var centertranslationinverse = (new THREE.Matrix4()).makeTranslation(-center.x,-center.y,-center.z);
 
-        //target.applyMatrix(centertranslationinverse );
         target.applyMatrix(transitionmatrix.clone());
-        //target.applyMatrix(centertranslation);
         updatematrices(target);
         target.__dirtyPosition = true;
         target.__dirtyRotation = true;
-        /*
-        var targetinverse = new THREE.Matrix4();
-        var refinverse = new THREE.Matrix4();
-        targetinverse.getInverse(this.target.matrixWorld);
-        refinverse.getInverse(this.refelement.matrix);
-        this.target.applyMatrix(targetinverse);
-        this.target.applyMatrix(refinverse);
-        this.target.applyMatrix(this.matrixWorld.clone());
-        updatematrices(this.target);
-        this.target.__dirtyPosition = true;
-        this.target.__dirtyRotation = true;
-
         
-        var targetmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,target.matrixWorld);
-        
-        
-        var refinverse = new THREE.Matrix4();
-        targetinverse.getInverse(target.matrixWorld);
-        refinverse.getInverse(this.refelement.matrix);
-        target.applyMatrix(targetinverse);
-        target.applyMatrix(refinverse);
-        target.applyMatrix(this.matrixWorld.clone());
-        
-        var targetinverse = new THREE.Matrix4();
-        targetinverse.getInverse(target.matrixWorld);
-        target.applyMatrix(targetinverse);
-        target.applyMatrix(targetmatrix);
-        //target.matrixWorld = targetmatrix;
-        updatematrices(target);
-        target.__dirtyPosition = true;
-        target.__dirtyRotation = true;
-        */
     }
 
     this.detach = function(){
@@ -294,44 +258,7 @@ Edge = function(c1,c2,parent) {
         return this.corners[0];
     }
 
-    /*
-    this.addToCorners = function(c1,c2,face){
-
-        var axis = this.getaxis();
-        var pointb1 = this.position.clone().sub(axis);
-        var pointb2 = this.position.clone().add(axis);
-        var constraint
-        constraint = new Physijs.PointConstraint(c1, this, c1.position,pointb1 );
-        constraint.positionb = face.worldToLocal(pointb1);
-        scene.addConstraint( constraint );
-        constraint = new Physijs.PointConstraint(c2, this, c2.position,pointb1 );
-        constraint.positionb = face.worldToLocal(pointb2);
-        scene.addConstraint( constraint );
-    };
-
-    this.getaxis = function(){
-        var axis = this.corners[0].position.clone();
-        axis.sub(this.corners[1].position);
-        axis = this.localToWorld(axis);
-        console.log('axis: '+axis.x + ',' + axis.y + ',' + axis.z);
-        return axis;
     
-    };
-
-    this.geteuler = function(){
-        var axis = new THREE.Euler (0,1,0);
-        axis.setFromRotationMatrix( this.matrixWorld );
-        console.log('euler: '+axis.x + ',' + axis.y + ',' + axis.z);
-        return axis;
-    };
-
-    this.getposition = function(){
-        var position = new THREE.Vector3();
-        position.setFromMatrixPosition( this.matrixWorld );
-        console.log('position: '+position.x + ',' + position.y + ',' + position.z);
-        return position;
-    };
-    */
     this.getdefaultcolor = function(){
         if (this.mass == 0) {return color_nailed}
         else return color_default_connector;
@@ -463,7 +390,7 @@ Element = function(geometry){
     };
     this.center.divideScalar(this.cornerpositions.length);
 
-    var spheregeometry =  new THREE.SphereGeometry( 4);
+    var spheregeometry =  new THREE.SphereGeometry( 60);
     spheregeometry.applyMatrix( new THREE.Matrix4().makeTranslation(this.center.x,this.center.y,this.center.z) );
     //Physijs.ConvexMesh.call(this,this.geometry,elementmaterial.clone(),elementmass);
     Physijs.ConvexMesh.call(this,spheregeometry,elementmaterial.clone(),elementmass);

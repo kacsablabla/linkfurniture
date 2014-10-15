@@ -142,8 +142,8 @@ function removeelement(element){
     scene.remove(element);
 }
 function nail(mymesh){
-    if (mymesh.mass != elementmass_nailed) {mymesh.mass = elementmass_nailed;return;};
-    mymesh.mass = elementmass;
+    //if (mymesh.mass != elementmass_nailed) {mymesh.mass = elementmass_nailed;return;};
+    //mymesh.mass = elementmass;
     mymesh.nailed = !mymesh.nailed;
     if (mymesh.nailed) mymesh.nailedMatrix = mymesh.matrixWorld.clone();
 }
@@ -179,9 +179,9 @@ function physicsautooff(){
     };
     for (var i = objectgroup.length - 1; i >= 0; i--) {
         var obj = objectgroup[i]
-        if (obj instanceof Element){
+        if (obj instanceof Element || obj instanceof CornerConnector){
 
-            var factor = 0.96;
+            var factor = 0.92;
             //if (obj.nailed) {factor = 0};
              
             var linear = obj.getLinearVelocity();
