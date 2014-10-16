@@ -107,8 +107,9 @@ exportconnectors = function(){
     var main = zip.folder("linkfurniture");
     var connectorsfolder = main.folder("connectors");
     var imagesfolder = main.folder("images");
-
+    var assemblyfolder = main.folder("assembly");
     mergedconnectors = [];
+    /*
     for (var i = connectors.length - 1; i >= 0; i--) {
         var generatedstl = stlFromGeometry(getmergedconnector(connectors[i]));
         //mergedconnectors.push();
@@ -121,12 +122,15 @@ exportconnectors = function(){
         connectorsfolder.file("simpleconnector"+i+".stl",generatedstl);
         console.log("simpleconnector export"+i);
     };
+    */
+    assemblyfolder.file("assembly.txt",saveassembly());
+    /*
     var loader = new THREE.STLLoader();
     var geom = loader.parseASCII(mergedconnectors[0]);
     assignUVs(geom);
     var mesh = new THREE.Mesh(geom,connectormaterial);
     scene.add(mesh);
-
+    */
     var savable = new Image();
     savable.src = renderer.domElement.toDataURL();
     imagesfolder.file("image.png", savable.src.substr(savable.src.indexOf(',')+1), {base64: true});

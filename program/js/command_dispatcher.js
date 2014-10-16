@@ -101,8 +101,14 @@ $(document).ready(function(){
         event.stopPropagation();
     });
     $("#load").click( function(event){
-        loadlog();
+        //handleFileSelect(event);
+        //loadlog();
         event.stopPropagation();
+    });
+    $("#choosefilebutton").click( function(event){
+        //handleFileSelect(event);
+        //loadlog();
+        //event.stopPropagation();
     });
     $("#save").click( function(event){
         exportconnectors();
@@ -278,14 +284,28 @@ function createcontroldiv(){
     button.title = "undo";
     container.appendChild(button);
 
+//input type="file" id="files" name="files[]" multiple
     button = document.createElement("div");
     button.style.top = rightspacing*3+"%"; 
     button.style.right = margin+"%";
     button.style.backgroundImage = 'url(../textures/icons/load.png)';
     button.className = "ControlButton";
     button.id = "load";
-    button.title = "load configuration";
     container.appendChild(button);
+
+    var choosefilebutton = document.createElement("input");
+    choosefilebutton.className = "ControlButton";
+    choosefilebutton.type = "file";
+    choosefilebutton.name = "selectedfile";
+    choosefilebutton.style.top = 0+"%"; 
+    choosefilebutton.style.right = 0+"%";
+    choosefilebutton.style.width = 100+"%";
+    choosefilebutton.style.height = 100+"%";
+    choosefilebutton.title = "load configuration";
+    //choosefilebutton.id = "load"; //"choosefilebutton";
+    choosefilebutton.style.opacity = 0;
+    button.appendChild(choosefilebutton);
+    choosefilebutton.addEventListener('change',handleFileSelect,false);
 
     button = document.createElement("div");
     button.style.top = rightspacing*4+"%"; 
@@ -390,6 +410,41 @@ function performfunction(){
     }
 }
 
+function savefile(){
+    // Check for the various File API support.
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+      // Great success! All the File APIs are supported.
+    } else {
+      alert('The File APIs are not fully supported in this browser.');
+    }
+}
+
+  function handleFileSelect(evt) {
+    //console.log('handleFileSelect');
+    //return;
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+
+      // Only process image files.
+      if (!f.type.match('text.*')) {
+        continue;
+      }
+
+      var reader = new FileReader();
+      
+        reader.onload = function(e) { 
+          var contents = e.target.result;
+          loadassembly(contents);
+        }
+       
+      // Read in the image file as a data URL.
+      var data = reader.readAsText(f);
+    }
+  }
+
+
 function executecommand(command){
 
     command = command ?  command.split() : document.getElementById('command').value.split();
@@ -468,7 +523,3 @@ function executecommand(command){
             break;
     }
 }
-
-var dictionary = {
-    1:{hu:"hello vilag",de:"guten tag welt",en:"hello world"}
-};

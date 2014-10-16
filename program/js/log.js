@@ -59,21 +59,15 @@ function poplog(){
     
 }
 
-
-function savelog(){
-
+function saveassembly(){
     var objects = JSON.stringify(objectgroup);
-    //console.log(objects);
     serialized = objects;
-    return;
-
-    var blob = new Blob(log, {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "mylog.txt");
+    return serialized;
 }
-
-function loadlog(parsed){
+function loadassembly(parsed){
     loadingmap = {};
-    if (parsed == undefined)parsed = JSON.parse(serialized);
+    if (parsed == undefined)parsed = serialized;
+    parsed = JSON.parse(parsed);
     for (var i = parsed.length - 1; i >= 0; i--) {
         var o = parsed[i];
         var s = undefined;
@@ -110,6 +104,12 @@ function loadlog(parsed){
         };
     };
     return;
-    var blob = new Blob(log, {type: "text/plain;charset=utf-8"});
-    saveAs(blob, "mylog.txt");
+}
+function savelog(){
+
+   
+}
+
+function loadlog(parsed){
+    
 }
