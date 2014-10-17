@@ -226,7 +226,7 @@ function selectmousetarget(){
     var closestintersection;
     for (var i = 0; intersects.length > i; i++) {
 
-        if (intersects[i].object.visible){
+        if (intersects[i].object.visible && !(intersects[i].object instanceof Element)){
 
             closestintersection = intersects[i].object;
             intersectionpoint = intersects[i];
@@ -283,8 +283,8 @@ function onDocumentMouseClick(event){
             else if (currentIntersected instanceof Corner ||
              currentIntersected instanceof CornerConnector){
                 selectedcorners.push(currentIntersected);
-                currentIntersected.realconnector.visible = true;
-                console.log(currentIntersected.parent.corners.indexOf(currentIntersected))
+                //currentIntersected.realconnector.visible = true;
+                //console.log(currentIntersected.parent.corners.indexOf(currentIntersected))
                 performfunction();
             } 
             if (currentIntersected instanceof Visualizer) {
@@ -305,6 +305,8 @@ function onDocumentMouseDown( event ) {
     mousedragging = false;
     mousemoved = 0;
     if (currentIntersected != undefined ) {
+        var multipletransform = false;
+        if (transformtype >1) multipletransform = true;
 
         if (transformtype == 1|| transformtype == 3) {
 
@@ -317,7 +319,7 @@ function onDocumentMouseDown( event ) {
                 var edge = intersected.parent.getcrossededge(intersected);
                 if (edge != undefined) {
                     transformcontrol.setMode( "rotate" );
-                    transformhelper.attach( intersected.parent, edge);
+                    transformhelper.attach( intersected.parent, edge,multipletransform);
                     transformcontrol.pointerDownIntersect("Y",intersectionpoint);
                 };
 
@@ -342,19 +344,17 @@ function onDocumentMouseDown( event ) {
                 transformcontrol.setMode( "translate" );
                 if (edge == intersected) {
                     edge = intersected.edges[0];
-                    transformhelper.attach( intersected,edge);
+                    transformhelper.attach( intersected,edge,multipletransform);
                     transformcontrol.pointerDownIntersect("Z",intersectionpoint);
                 }
                 else {
-                    transformhelper.attach( intersected,edge);
+                    transformhelper.attach( intersected,edge,multipletransform);
                     transformcontrol.pointerDownIntersect("Y",intersectionpoint)
                 };
                 
 
             };
         };
-
-        if (transformtype >1) transformhelper.thingstomove = objectgroup;
         
         
     };

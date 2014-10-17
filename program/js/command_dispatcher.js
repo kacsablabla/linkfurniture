@@ -316,6 +316,19 @@ function createcontroldiv(){
     button.title = "save configuration";
     container.appendChild(button);
 
+    var savediv = document.createElement("div");
+    savediv.id = "SaveDialog";
+    //container.appendChild(savediv);
+
+    //savediv.innerHTML =' <input type="file" dialogtype="save" />';//'<div class="roundedTwo"><input type="checkbox" value="None" id="roundedTwo" name="check" /><label for="roundedTwo"></label></div>';
+    
+/*
+    var saveassembly = document.createElement(div); 
+    saveassembly.className = "roundedTwo";
+    savediv.appendChild (saveassembly);
+    saveassembly
+*/
+
 
 
 }

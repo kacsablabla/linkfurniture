@@ -66,8 +66,8 @@ TransformHelper = function(){
     this.oldmatrix;
 
     THREE.Mesh.call(this,edgegeometry,helpermaterial.clone());
-    //this.visible = false;
-    this.attach = function(target,refelement){
+    this.visible = false;
+    this.attach = function(target,refelement,multiple){
 
         if (this.target != undefined) return;
         if(refelement == undefined) refelement = target.getselectededge();
@@ -77,6 +77,7 @@ TransformHelper = function(){
         transformcontrol.attach(this);
         this.thingstomove.push(target);
         this.oldmatrix = this.matrixWorld.clone();
+        if (multiple) this.thingstomove = collectassembly(target,[]);
     }
     this.setrefelement = function(refelement){
         
@@ -367,10 +368,12 @@ Element = function(geometry){
 
     spheregeometry.applyMatrix( new THREE.Matrix4().makeTranslation(this.center.x,this.center.y,this.center.z) );
     */
-    Physijs.ConvexMesh.call(this,elementgeometry,elementmaterial.clone(),elementmass);
+    var phisicalmaterial = elementmaterial.clone();
+    phisicalmaterial.visible = false;
+    Physijs.ConvexMesh.call(this,elementgeometry,phisicalmaterial,elementmass);
     this.position.set(0,260,0);
-    //this.visible = false;
     this.add( this.visualmesh);
+    //this.visible = false;
 
     this.initconstraints = function(){
 
@@ -713,4 +716,26 @@ function getindexforcorner(element,corner){
     for (var i = element.corners.length - 1; i >= 0; i--) {
         if (element.corners[i] == corner)return i;
     };
+}
+
+function collectassembly(element,collected){
+    if (element instanceof Corner) {collectassembly(element.parent)};
+    if (element instanceof Edge) {collectassembly(element.parent)};
+    if (!(collected.indexOf(element)== -1)) return collected;
+    collected.push(element);
+    if (element instanceof Element) {
+        for (var i = element.corners.length - 1; i >= 0; i--) {
+            var corner = element.corners[i];
+            var connector = corner.connector;
+            if (connector != undefined) {collectassembly(connector,collected)};
+        };
+    };
+    if (element instanceof CornerConnector) {
+        for (var i = element.corners.length - 1; i >= 0; i--) {
+            var corner = element.corners[i];
+            var otherelement = corner.parent;
+            if (otherelement != undefined) {collectassembly(otherelement,collected)};
+        };
+    };
+    return collected;
 }

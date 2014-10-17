@@ -11,7 +11,7 @@ function deselectcorners(){
 
     for (var i = selectedcorners.length - 1; i >= 0; i--) {
         deselect(selectedcorners[i]);
-        selectedcorners[i].realconnector.visible = false;
+        //selectedcorners[i].realconnector.visible = false;
     };
     selectedcorners = [];
 }
