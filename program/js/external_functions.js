@@ -212,10 +212,17 @@ function physicsautooff(){
 function peasantblinding(){
     if (helpervisibility) {
         hideedges();
+        //scene.add(light_spot);
     }
     else {
         showedges();
+
+        //renderer.shadowMapAutoUpdate = false;
+        //renderer.clearTarget( light_spot.shadowMap );
+        //scene.remove(light_spot);
+        //renderer.shadowMapAutoUpdate = true;
     }
+
     helpervisibility = !helpervisibility;
 }
 

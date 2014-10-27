@@ -64,6 +64,8 @@ TransformHelper = function(){
     this.thingstomove = [];
     this.refelement;
     this.oldmatrix;
+    this.oldinverse;
+    this.transitionmatrix;
 
     THREE.Mesh.call(this,edgegeometry,helpermaterial.clone());
     this.visible = false;
@@ -87,12 +89,29 @@ TransformHelper = function(){
         this.applyMatrix(refelement.matrixWorld.clone());
         updatematrices(this);
     };
-
+    this.positionoutofbound = function(position){
+        
+        var limit = boxsize/2-200;
+        if (position.x>=limit ||
+            position.x<=-limit||
+            position.y>=limit ||
+            position.y<=20 ||
+            position.z>=limit ||
+            position.z<=-limit )return true;
+        return false
+    }
+    this.checktransform = function(){
+        var elementpos
+        for (var i = this.thingstomove.length - 1; i >= 0; i--) {
+            elementpos = this.thingstomove[i].position.clone();
+            elementpos.applyMatrix4(this.transitionmatrix.clone());
+            if (this.positionoutofbound(elementpos)) return false;
+        };
+        return true;
+    }
     this.updatetarget = function(target){
-
-        var oldinverse = (new THREE.Matrix4()).getInverse(this.oldmatrix);
-        var transitionmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,oldinverse);
-        target.applyMatrix(transitionmatrix.clone());
+        
+        target.applyMatrix(this.transitionmatrix.clone());
         updatematrices(target);
         target.__dirtyPosition = true;
         target.__dirtyRotation = true;
@@ -107,6 +126,13 @@ TransformHelper = function(){
         this.thingstomove = [];
     }
     this.update = function(){
+        if (this.target == undefined) return;
+        
+        this.oldinverse = (new THREE.Matrix4()).getInverse(this.oldmatrix);
+        this.transitionmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,this.oldinverse);
+
+        if (!this.checktransform()) return;
+        
         for (var i = this.thingstomove.length - 1; i >= 0; i--) {
             this.updatetarget(this.thingstomove[i]);
         };

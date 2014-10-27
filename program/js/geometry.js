@@ -205,6 +205,7 @@ function main_init() {
 
     function boundposition(element){
 
+        /*
         var limit = boxsize/2-200;
         if (element.position.x>=limit)element.position.x = limit;
         if (element.position.y>=limit)element.position.y = limit;
@@ -212,6 +213,7 @@ function main_init() {
         if (element.position.x<=-limit)element.position.x = -limit;
         if (element.position.y<=20)element.position.y = 0;
         if (element.position.z<=-limit)element.position.z = -limit;
+        */
     }
     
     
@@ -392,17 +394,21 @@ function onDocumentMouseMove( event ) {
 
 function addspotlight(){
     light_spot = new THREE.SpotLight( 0xffffff, 0.33, 0, Math.PI / 2, 1 );
-    light_spot.position.set( boxsize/4, boxsize/4, boxsize/4 );
+    light_spot.position.set( 0, boxsize/2, boxsize/2 );
     light_spot.target.position.set( 0, 0, 0 );
 
     light_spot.castShadow = true;
 
-    light_spot.shadowCameraNear = 1200;
-    light_spot.shadowCameraFar = boxsize/2;
-    light_spot.shadowCameraFov = 50;
+    light_spot.shadowCameraNear = boxsize/2.5;
+    light_spot.shadowCameraFar = boxsize*1.3;
+    light_spot.shadowMapWidth = 2048;
+    light_spot.shadowMapHeight = 2048;
+    light_spot.shadowCameraFov = 100;
 
     light_spot.shadowBias = 0.00001;
     light_spot.shadowDarkness = 0.18;
+    //light_spot.shadowCameraVisible = true;
+    light_spot.angle = Math.PI/2;
 
     scene.add( light_spot );
 }
