@@ -127,7 +127,7 @@ TransformHelper = function(){
     }
     this.update = function(){
         if (this.target == undefined) return;
-        
+
         this.oldinverse = (new THREE.Matrix4()).getInverse(this.oldmatrix);
         this.transitionmatrix = (new THREE.Matrix4()).multiplyMatrices(this.matrixWorld,this.oldinverse);
 
@@ -263,6 +263,60 @@ Edge = function(c1,c2,parent) {
     var angle = (new THREE.Vector3(0,1,0)).angleTo(c1.position.clone().sub(c2.position));
     this.rotation.z = angle;
 
+    this.isbrother = function(otheredge){
+        if (otheredge == this) return true;
+        var conn1 = this.corners[0].connector;
+        var conn2 = this.corners[1].connector;
+        if ( conn1 == undefined ||
+             conn2 == undefined) return false;
+        var conn3 = otheredge.corners[0].connector;
+        var conn4 = otheredge.corners[1].connector;
+        if ( conn3 == undefined ||
+             conn4 == undefined) return false;
+        if ((conn1 == conn3 && conn2 == conn4)||
+            (conn1 == conn4 && conn2 == conn3)) return true;
+        return false;
+    }
+
+    this.getbrothers = function(){
+        var conn1 = this.corners[0].connector;
+        var conn2 = this.corners[1].connector;
+        if ( conn1 == undefined ||
+             conn2 == undefined) return brothers;
+        var neighbourparents = [];
+        var brothers = [];
+        for (var i = conn1.corners.length - 1; i >= 0; i--) {
+            var corner1 = conn1.corners[i];
+            if (corner1 == this.corners[0]) continue;
+            neighbourparents.push([corner1].parent);
+        };
+        for (var i = conn2.corners.length - 1; i >= 0; i--) {
+            var corner1 = conn1.corners[i];
+            if (corner1 == this.corners[1]) continue;
+            if (neighbourparents.indexOf([corner1].parent) != -1) {
+                var neighbourparent = [corner1].parent;
+                for (var i = neighbourparent.edges.length - 1; i >= 0; i--) {
+                    var otheredge = neighbourparent.edges[i];
+                    if (this.isbrother(otheredge)) {
+                        brothers.push(otheredge);
+                        continue;
+                    };
+                };
+            };
+        };
+        return brothers;
+    }
+
+    this.getbrotherforelement = function(element){
+        if (element == undefined) return this;
+        for (var i = element.edges.length - 1; i >= 0; i--) {
+            var otheredge = element.edges[i];
+            if (this.isbrother(otheredge)) {
+                return otheredge;
+            };
+        };
+    }
+
     this.othercorner = function(corner){
         if (this.corners[0] == corner)return this.corners[1];
         return this.corners[0];
@@ -305,6 +359,16 @@ Corner = function(parent) {
 
     THREE.Mesh.call(this,cornergeometry,helpermaterial.clone());
 
+    
+    this.getbrotherforelement = function(element){
+        if (element == undefined) return this;
+        for (var i = element.corners.length - 1; i >= 0; i--) {
+            var othercorner = element.corners[i];
+            if (this.isconnectedto(othercorner)) {
+                return othercorner;
+            };
+        };
+    }
     this.getdefaultcolor = function(){
         if (this.mass == 0) {return color_nailed}
         else return color_default_connector;
@@ -339,6 +403,7 @@ Corner = function(parent) {
         return constraint;
     }
     this.isconnectedto = function(othercorner){
+        if (othercorner == this) return true;
         if (this.connector == undefined) return false;
         if (othercorner.connector == undefined) return false;
         if (this.connector == othercorner.connector) return true;

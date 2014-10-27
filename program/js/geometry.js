@@ -318,6 +318,7 @@ function onDocumentMouseDown( event ) {
             if (currentIntersected instanceof Corner)intersected = currentIntersected;
             if (currentIntersected instanceof Edge)intersected = currentIntersected;
             if (intersected != undefined) {
+                intersected = intersected.getbrotherforelement(selectedelements[0]);
                 var edge = intersected.parent.getcrossededge(intersected);
                 if (edge != undefined) {
                     transformcontrol.setMode( "rotate" );
