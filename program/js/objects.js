@@ -466,6 +466,31 @@ Element = function(geometry){
     this.add( this.visualmesh);
     //this.visible = false;
 
+    this.showedges = function(){
+
+        this.visualmesh.castShadow = false;
+        this.visualmesh.receiveShadow = false;
+        for (var j = this.edges.length - 1; j >= 0; j--) {
+            this.edges[j].visible = true;
+        };
+        for (var j = this.corners.length - 1; j >= 0; j--) {
+            if (this.corners[j].connector == undefined) this.corners[j].visible = true;
+            this.corners[j].realconnector.visible = false;
+        };
+    }
+    this.hideedges = function(){
+
+        this.addconnectors();
+        this.visualmesh.castShadow = true;
+        this.visualmesh.receiveShadow = true;
+        for (var j = this.edges.length - 1; j >= 0; j--) {
+            this.edges[j].visible = false;
+        };
+        for (var j = this.corners.length - 1; j >= 0; j--) {
+            this.corners[j].visible = false;
+            this.corners[j].realconnector.visible = true;
+        };
+    }
     this.initconstraints = function(){
 
         for (var i = 0; i < this.cornerpositions.length; i++) {
@@ -478,7 +503,7 @@ Element = function(geometry){
             this.add(e);
             this.edges.push(e);
         };
-        this.addconnectors();
+        //this.addconnectors();
 
     }
     this.addcorner = function(p){
@@ -532,7 +557,6 @@ Element = function(geometry){
             this.add(e);
             e.parsejson(edges[i]);
         };
-        this.addconnectors();
         this.applyMatrix (JSON.parse(jsn['matrixWorld']));
         updatematrices(this);
     }
@@ -745,15 +769,7 @@ function hideedges(){
         var obj = objectgroup[i];
         if (obj instanceof CornerConnector) obj.visible = false;
         else if (obj instanceof Element) {
-            obj.visualmesh.castShadow = true;
-            obj.visualmesh.receiveShadow = true;
-            for (var j = obj.edges.length - 1; j >= 0; j--) {
-                obj.edges[j].visible = false;
-            };
-            for (var j = obj.corners.length - 1; j >= 0; j--) {
-                obj.corners[j].visible = false;
-                obj.corners[j].realconnector.visible = true;
-            };
+            obj.hideedges();;
         };
     };
 }
@@ -762,15 +778,7 @@ function showedges(){
         var obj = objectgroup[i];
         if (obj instanceof CornerConnector) obj.visible = true;
         else if (obj instanceof Element) {
-            obj.visualmesh.castShadow = false;
-            obj.visualmesh.receiveShadow = false;
-            for (var j = obj.edges.length - 1; j >= 0; j--) {
-                obj.edges[j].visible = true;
-            };
-            for (var j = obj.corners.length - 1; j >= 0; j--) {
-                if (obj.corners[j].connector == undefined) obj.corners[j].visible = true;
-                obj.corners[j].realconnector.visible = false;
-            };
+            obj.showedges();
         };
     };
 }

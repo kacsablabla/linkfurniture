@@ -67,10 +67,13 @@ addrealconnectors = function(element,type){
     if (type == 3) realconnectors = rightangleconnectors;
 
     for (var i = 0; i < element.corners.length; i++) {
+        var corner = element.corners[i];
+        if (corner.realconnector != undefined) continue;
+        if (realconnectors[i] == undefined) continue;
         var mesh = new THREE.Mesh(realconnectors[i],connectormaterial);
         if (helpervisibility) mesh.visible = false;
         element.add(mesh);
-        element.corners[i].realconnector = mesh;
+        corner.realconnector = mesh;
     };
 };
 
