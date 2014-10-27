@@ -104,7 +104,7 @@ function main_init() {
     scene.add(table);
     
     orbitcontrol = new THREE.OrbitControls( camera );
-    orbitcontrol.addEventListener( 'change', update );
+    orbitcontrol.addEventListener( 'change', orbitupdate );
     //renderer.domElement.addEventListener( 'mousedown', onDocumentMouseDown, false );
     //renderer.domElement.addEventListener( 'mouseup', onDocumentMouseUp, false );
     //renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -125,7 +125,7 @@ function main_init() {
 
     transformcontrol = new THREE.TransformControls( camera, renderer.domElement );
 
-    transformcontrol.addEventListener( 'change', render );
+    transformcontrol.addEventListener( 'change', transformupdate );
 
     container.addEventListener( 'keydown', function ( event ) {
         
@@ -171,27 +171,19 @@ function main_init() {
     function animate() {
 
         requestAnimationFrame( animate );
-
         render();
-        stats.update();
 
     }
     function render() {
-        transformcontrol.update();
-        transformhelper.update();
-        
-        for (var i = objectgroup.length - 1; i >= 0; i--) {
-            if (objectgroup[i] instanceof CornerConnector) continue;
-            objectgroup[i].rendercallback();
-            boundposition(objectgroup[i]);
-        };
+
+        stats.update(); 
         if (physicssimulation) {
             physicsautooff();
             scene.simulate(); // run physic
         };
         renderer.render( scene, camera );
     }
-    function update() {
+    function orbitupdate() {
         //check camera position
         var limit = boxsize/2-100;
         if (camera.position.x>=limit)camera.position.x = limit;
@@ -200,6 +192,17 @@ function main_init() {
         if (camera.position.x<=-limit)camera.position.x = -limit;
         if (camera.position.y<=-limit)camera.position.y = -limit;
         if (camera.position.z<=-limit)camera.position.z = -limit;
+    }
+    function transformupdate() {
+
+        transformcontrol.update();
+        transformhelper.update();
+        for (var i = objectgroup.length - 1; i >= 0; i--) {
+            if (objectgroup[i] instanceof CornerConnector) continue;
+            objectgroup[i].rendercallback();
+            boundposition(objectgroup[i]);
+        };
+
     }
     animate();
 
@@ -368,6 +371,7 @@ function onDocumentMouseUp( event ) {
     if (event.button !=0) return;
     event.preventDefault();
     mousedown = false;
+    transformhelper.detach();
     //transformhelper.detach();
     
 }
